@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CustomerTransactionType {
+  UDHAAR
+  PAYMENT
+  ADVANCE
+}
+
+enum SupplierTransactionType {
+  CREDIT
+  PAYMENT
+}
+
+model Customer {
+  id             String                @id @default(cuid())
+  name           String
+  phone          String?
+  note           String?
+  balancePaise   Int                   @default(0)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  transactions   CustomerTransaction[]
+
+  @@index([name])
+  @@index([phone])
+}
+
+model CustomerTransaction {
+  id                String                  @id @default(cuid())
+  customerId        String
+  customer          Customer                @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  type              CustomerTransactionType
+  amountPaise       Int
+  description       String?
+  balanceAfterPaise Int
+  createdAt         DateTime                @default(now())
+
+  @@index([customerId, createdAt])
+  @@index([createdAt])
+}
+
+model Supplier {
+  id             String                @id @default(cuid())
+  name           String
+  phone          String?
+  note           String?
+  balancePaise   Int                   @default(0)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  transactions   SupplierTransaction[]
+
+  @@index([name])
+}
+
+model SupplierTransaction {
+  id                String                  @id @default(cuid())
+  supplierId        String
+  supplier          Supplier                @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  type              SupplierTransactionType
+  amountPaise       Int
+  description       String?
+  dueDate           DateTime?
+  balanceAfterPaise Int
+  createdAt         DateTime                @default(now())
+
+  @@index([supplierId, createdAt])
+  @@index([createdAt])
+  @@index([dueDate])
+}
