@@ -21,20 +21,29 @@ export function EntryForm({ title, subtitle, amountLabel = "Amount", options, ac
         <p className="text-sm font-semibold text-[#6f6a60]">{subtitle}</p>
       </div>
       <div className="grid gap-3">
-        <label className="grid gap-2 text-sm font-bold text-[#384238]">
-          Entry type
-          <select
-            name="type"
-            className="tap-target rounded-md border border-stone-300 bg-white px-3 text-base font-bold focus:outline-none focus:ring-2 focus:ring-[#16803c]"
-            required
-          >
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label} - {option.subtitle}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div
+          className={`grid gap-2 ${options.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}
+          role="radiogroup"
+          aria-label="Entry type"
+        >
+          {options.map((option, index) => (
+            <label
+              key={option.value}
+              data-testid={`entry-type-${option.value}`}
+              className="tap-target block cursor-pointer rounded-lg border-2 border-stone-300 bg-white px-3 py-3 text-left font-black text-[#1f271f] transition-colors hover:border-[#16803c] has-[:checked]:border-[#16803c] has-[:checked]:bg-[#16803c] has-[:checked]:text-white has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#16803c]"
+            >
+              <input
+                type="radio"
+                name="type"
+                value={option.value}
+                defaultChecked={index === 0}
+                className="sr-only"
+              />
+              <span className="block text-base">{option.label}</span>
+              <span className="block text-xs font-semibold text-current/60">{option.subtitle}</span>
+            </label>
+          ))}
+        </div>
         <label className="grid gap-2 text-sm font-bold text-[#384238]">
           {amountLabel}
           <input
@@ -69,7 +78,7 @@ export function EntryForm({ title, subtitle, amountLabel = "Amount", options, ac
         </label>
         <button
           type="submit"
-          className="tap-target rounded-md bg-[#16803c] px-5 py-3 text-lg font-black text-white shadow-sm hover:bg-[#11652f] focus:outline-none focus:ring-2 focus:ring-[#f59e0b]"
+          className="tap-target rounded-md bg-[#f59e0b] px-5 py-3 text-lg font-black text-[#1f271f] shadow-sm hover:bg-[#e08e00] focus:outline-none focus:ring-2 focus:ring-[#16803c]"
         >
           Save Entry
         </button>
