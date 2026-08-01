@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyCustomerEntry, getCustomerBalanceDisplay } from "@/lib/balance";
+import { applyCustomerEntry, getCustomerBalanceDisplay } from "../lib/balance";
 
 describe("customer signed-balance engine", () => {
   it("tracks pure udhaar as positive balance", () => {

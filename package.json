@@ -16,7 +16,7 @@
     "seed": "prisma db seed"
   },
   "dependencies": {
-    "@prisma/client": "latest",
+    "@prisma/client": "6.19.3",
     "next": "16.2.12",
     "react": "19.2.8",
     "react-dom": "19.2.8"
@@ -28,7 +28,7 @@
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "postcss": "latest",
-    "prisma": "latest",
+    "prisma": "6.19.3",
     "tailwindcss": "latest",
     "tsx": "latest",
     "typescript": "latest",
