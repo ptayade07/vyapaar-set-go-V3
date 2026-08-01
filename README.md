@@ -63,7 +63,7 @@ It creates:
 
 - 8 customers with mixed udhaar, advance, and settled balances.
 - 3 suppliers with dues, including one overdue supplier.
-- 20 total transactions spread across the last 7 days.
+- 21 total transactions spread across the last 7 days.
 
 Run it manually with:
 
