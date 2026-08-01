@@ -31,7 +31,7 @@
     "prisma": "6.19.3",
     "tailwindcss": "latest",
     "tsx": "latest",
-    "typescript": "latest",
+    "typescript": "6.0.3",
     "vitest": "latest"
   },
   "prisma": {
