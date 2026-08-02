@@ -41,3 +41,16 @@ suppliers are not parsed from free text.
   never silently.
 - If the parse is incomplete after both stages, no confirmation card is shown; the shopkeeper is
   pointed at the manual entry form instead of guessing.
+
+## Inventory Contract
+
+Inventory is deliberately minimal: item name, quantity, purchase price paise, selling price paise.
+No barcodes, no categories, no per-item transaction history.
+
+- `quantity <= 5` is the single low-stock rule (`lib/inventory.ts`). At or below that threshold, the
+  item row is highlighted red and shows a "Kam stock!" badge. There is no separate "out of stock"
+  state — zero is just the lowest value low stock can take.
+- Quantity changes only through the +/- stepper (a signed delta applied server-side), never through
+  a free-text quantity field on the edit form. The stepper clamps at zero; it cannot go negative.
+- Editing an item (name, purchase price, selling price) is a separate action from adjusting
+  quantity, so a shopkeeper fixing a price typo never accidentally resets their stock count.

@@ -45,3 +45,16 @@
 - Wire `parseQuickEntry` / `confirmQuickEntry` server actions and a Dashboard `QuickEntry` component
   that shows a confirmation card (with inline "create this customer" option) before writing anything.
 - Acceptance command: `npm test && npm run typecheck`
+
+## Milestone 8: Inventory screen
+
+- Add an `InventoryItem` Prisma model: name, quantity, purchase price paise, selling price paise.
+  No barcodes, no categories.
+- Add a low-stock threshold helper (`lib/inventory.ts`) with Vitest coverage for the `quantity <= 5`
+  boundary.
+- Add server actions to create/edit an item and to adjust quantity by a signed delta (stepper),
+  clamped at zero.
+- Build the Inventory screen: add/edit item forms, a +/- quantity stepper per item, and a red
+  "Kam stock!" badge/highlight when `quantity <= 5`.
+- Seed a handful of demo items, including at least one low-stock item.
+- Acceptance command: `npm test && npm run typecheck`
