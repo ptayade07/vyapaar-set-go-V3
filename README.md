@@ -2,7 +2,10 @@
 
 ## Prerequisites
 
-- No OpenAI API key is needed. The MVP is pure CRUD plus deterministic balance math.
+- No OpenAI API key is needed. The MVP is pure CRUD plus deterministic balance math, and the
+  Dashboard's Quick Entry box parses Hinglish sentences with a deterministic rule parser first.
+- `OPENAI_API_KEY` is optional. Set it only if you want smarter fallback parsing for Quick Entry
+  sentences the rule parser can't understand — the app works fully without it.
 - One free Postgres connection string is required for deploy and local persistence. Neon is the documented default and has a no-card free tier.
 - No login is included for the demo. The app opens straight to Dashboard.
 
@@ -73,12 +76,29 @@ npm run seed
 
 ## Screens
 
-- Dashboard: summary cards, recent transactions, and quick actions.
+- Dashboard: summary cards, Quick Entry sentence box, recent transactions, and quick actions.
 - Customers: searchable khata list and add-customer form.
 - Customer Detail: passbook-style history, signed balance, entry form, reminder copy button.
 - Suppliers: supplier list with overdue badges and add-supplier form.
 - Supplier Detail: supplier passbook, credit/payment entries, due dates.
 - Daily Hisaab: date picker, daily totals, and daily transaction list.
+
+## Quick Entry (Dashboard)
+
+Type one Hinglish sentence — e.g. "Ramesh ko 250 ka udhaar" or "Sunita se 500 payment liya" —
+and Quick Entry turns it into a customer transaction:
+
+1. A deterministic rule parser (`lib/quick-entry.ts`) always runs first: it extracts an amount,
+   a type keyword (`udhaar` / `payment` / `advance`, with `liya`/`diya` as fallback keywords), and
+   a customer name, preferring a match against your existing customers. No API key required.
+2. If that parse is incomplete and `OPENAI_API_KEY` is set, an LLM fallback (`lib/quick-entry-llm.ts`)
+   fills in the gaps. It fails closed on any error, so a missing or misbehaving key never breaks
+   the deterministic path.
+3. Nothing is saved automatically. A confirmation card always shows the parsed customer, amount,
+   and entry type first. If the customer doesn't exist yet, the card offers to create them inline
+   as part of the same confirm step.
+
+See `AGENTS.md` for the full parsing contract.
 
 ## How Codex Built This
 
@@ -91,7 +111,9 @@ npm run seed
 ## Demo Video Script
 
 1. Open Dashboard and show Total Udhaar, Advance, Aaj ka Hisaab, and Supplier Dena.
-2. Open Customers, search a name, and show red/green/grey khata balances.
-3. Open a Customer Detail page, add `Udhaar Diya`, then add a larger `Payment Liya`.
-4. Show the balance flip automatically from `Udhaar` to `Advance` and copy the reminder.
-5. Open Suppliers and Daily Hisaab to show overdue dena and end-of-day tally.
+2. Type "Ramesh ko 250 ka udhaar" into Quick Entry, show the confirmation card, and confirm.
+3. Type a sentence for a new customer, show the inline "create + save" offer, and confirm.
+4. Open Customers, search a name, and show red/green/grey khata balances.
+5. Open a Customer Detail page, add `Udhaar Diya`, then add a larger `Payment Liya`.
+6. Show the balance flip automatically from `Udhaar` to `Advance` and copy the reminder.
+7. Open Suppliers and Daily Hisaab to show overdue dena and end-of-day tally.
