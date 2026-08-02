@@ -96,6 +96,23 @@ const customers: CustomerSeed[] = [
   },
 ];
 
+type InventoryItemSeed = {
+  name: string;
+  quantity: number;
+  purchasePricePaise: number;
+  sellingPricePaise: number;
+};
+
+const inventoryItems: InventoryItemSeed[] = [
+  { name: "Chai Patti 250g", quantity: 40, purchasePricePaise: 12000, sellingPricePaise: 15000 },
+  { name: "Chawal 1kg", quantity: 30, purchasePricePaise: 4500, sellingPricePaise: 6000 },
+  { name: "Sarson Tel 1L", quantity: 4, purchasePricePaise: 15000, sellingPricePaise: 19000 },
+  { name: "Maggi Pack", quantity: 25, purchasePricePaise: 1200, sellingPricePaise: 1500 },
+  { name: "Toothpaste", quantity: 3, purchasePricePaise: 4000, sellingPricePaise: 5500 },
+  { name: "Biscuit Packet", quantity: 50, purchasePricePaise: 800, sellingPricePaise: 1000 },
+  { name: "Detergent 1kg", quantity: 15, purchasePricePaise: 9000, sellingPricePaise: 12000 },
+];
+
 const suppliers: SupplierSeed[] = [
   {
     name: "Shakti Distributors",
@@ -122,13 +139,27 @@ const suppliers: SupplierSeed[] = [
 ];
 
 async function main() {
-  const [customerCount, supplierCount] = await Promise.all([prisma.customer.count(), prisma.supplier.count()]);
+  const [customerCount, supplierCount, inventoryCount] = await Promise.all([
+    prisma.customer.count(),
+    prisma.supplier.count(),
+    prisma.inventoryItem.count(),
+  ]);
 
   if (customerCount > 0 || supplierCount > 0) {
-    console.log("Seed skipped: database already has demo records.");
-    return;
+    console.log("Khata seed skipped: database already has demo records.");
+  } else {
+    await seedKhata();
   }
 
+  if (inventoryCount > 0) {
+    console.log("Inventory seed skipped: items already exist.");
+  } else {
+    await prisma.inventoryItem.createMany({ data: inventoryItems });
+    console.log("Seed complete: demo inventory is ready.");
+  }
+}
+
+async function seedKhata() {
   for (const customerSeed of customers) {
     let balancePaise = 0;
     const customer = await prisma.customer.create({
