@@ -54,3 +54,26 @@ No barcodes, no categories, no per-item transaction history.
   a free-text quantity field on the edit form. The stepper clamps at zero; it cannot go negative.
 - Editing an item (name, purchase price, selling price) is a separate action from adjusting
   quantity, so a shopkeeper fixing a price typo never accidentally resets their stock count.
+
+## Hisaab AI Summary Contract
+
+The Hisaab page's "Din ka Summary" card is fetched client-side from `GET /api/hisaab-summary`
+**after** the page has already server-rendered — the route is never awaited during SSR, so a slow
+or misbehaving OpenAI call can only delay the summary card, never the rest of the page.
+
+- "Customers with udhaar older than 15 days" means: `balancePaise > 0` (they currently owe
+  something) AND their earliest `UDHAAR` transaction is more than 15 days old. The app has no
+  point-in-time balance history, so this is evaluated against the current balance and current
+  time, not the report date being viewed — it is a "who's overdue right now" signal, not a
+  historical reconstruction.
+- The route always computes the same `HisaabSummaryData` (today's udhaar/payments/advance totals,
+  old-udhaar customers, low-stock items via [[Inventory Contract]]'s `isLowStock`) regardless of
+  whether an API key is present.
+- If `OPENAI_API_KEY` is set, `lib/hisaab-summary-llm.ts` turns that data into a short Hinglish
+  paragraph. It must fail closed exactly like the quick-entry LLM fallback: any network error,
+  non-200 response, or empty content falls straight through to the deterministic template — never
+  a 500, never a blank card.
+- If no key is set, `buildTemplatedSummary` in `lib/hisaab-summary.ts` builds the same paragraph
+  deterministically from the identical data, so the feature is fully usable with zero API keys.
+- The response always reports which path produced it (`"ai"` or `"template"`) so the UI can be
+  transparent about the source, matching the Quick Entry confirmation card's existing convention.

@@ -58,3 +58,16 @@
   "Kam stock!" badge/highlight when `quantity <= 5`.
 - Seed a handful of demo items, including at least one low-stock item.
 - Acceptance command: `npm test && npm run typecheck`
+
+## Milestone 9: AI end-of-day Hisaab summary
+
+- Add pure, testable data-shaping helpers (`lib/hisaab-summary.ts`): a deterministic templated
+  summary and an LLM prompt builder, both built from the same `HisaabSummaryData` shape.
+- Add an LLM fallback (`lib/hisaab-summary-llm.ts`) mirroring the quick-entry LLM module's
+  fail-closed contract: only called when `OPENAI_API_KEY` is set, never throws.
+- Add a `GET /api/hisaab-summary` route that gathers the day's data (udhaar/payments/advance
+  totals, customers with udhaar older than 15 days, low-stock items) and returns either the AI
+  summary or the deterministic template, tagging which one it used.
+- Add a client component that fetches the summary after the Hisaab page has already rendered, so
+  the page is never blocked on `OPENAI_API_KEY` being set or the API being slow/down.
+- Acceptance command: `npm test && npm run typecheck`
