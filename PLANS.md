@@ -35,3 +35,13 @@
 - Run dev server, tests, typecheck, build, and self-review diff.
 - Commit incremental work with `Codex <codex@openai.com>` author.
 - Acceptance command: `git log --oneline --decorate -5`
+
+## Milestone 7: Quick Entry natural-language box
+
+- Add a deterministic rule/regex parser for Hinglish one-line entries (`lib/quick-entry.ts`), matched
+  against known customers first, with Vitest coverage.
+- Add an optional LLM fallback (`lib/quick-entry-llm.ts`) used only when the deterministic parser is
+  incomplete and `OPENAI_API_KEY` is set; no-ops cleanly without a key.
+- Wire `parseQuickEntry` / `confirmQuickEntry` server actions and a Dashboard `QuickEntry` component
+  that shows a confirmation card (with inline "create this customer" option) before writing anything.
+- Acceptance command: `npm test && npm run typecheck`
