@@ -67,6 +67,11 @@ It creates:
 - 8 customers with mixed udhaar, advance, and settled balances.
 - 3 suppliers with dues, including one overdue supplier.
 - 21 total transactions spread across the last 7 days.
+- 7 inventory items, including 2 below the low-stock threshold.
+
+Khata (customer/supplier) seeding and inventory seeding are independent: each only runs when its
+own tables are empty, so re-seeding after adding inventory to an existing khata database (or vice
+versa) won't duplicate anything.
 
 Run it manually with:
 
@@ -81,6 +86,8 @@ npm run seed
 - Customer Detail: passbook-style history, signed balance, entry form, reminder copy button.
 - Suppliers: supplier list with overdue badges and add-supplier form.
 - Supplier Detail: supplier passbook, credit/payment entries, due dates.
+- Inventory: item name, quantity, purchase price, selling price; add/edit items, a +/- quantity
+  stepper, and a red "Kam stock!" badge when quantity is 5 or below. No barcodes, no categories.
 - Daily Hisaab: date picker, daily totals, and daily transaction list.
 
 ## Quick Entry (Dashboard)
@@ -116,4 +123,5 @@ See `AGENTS.md` for the full parsing contract.
 4. Open Customers, search a name, and show red/green/grey khata balances.
 5. Open a Customer Detail page, add `Udhaar Diya`, then add a larger `Payment Liya`.
 6. Show the balance flip automatically from `Udhaar` to `Advance` and copy the reminder.
-7. Open Suppliers and Daily Hisaab to show overdue dena and end-of-day tally.
+7. Open Inventory, tap the +/- stepper on a low-stock item, and show the "Kam stock!" badge.
+8. Open Suppliers and Daily Hisaab to show overdue dena and end-of-day tally.
