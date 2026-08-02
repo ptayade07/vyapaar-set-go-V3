@@ -5,7 +5,8 @@
 - No OpenAI API key is needed. The MVP is pure CRUD plus deterministic balance math, and the
   Dashboard's Quick Entry box parses Hinglish sentences with a deterministic rule parser first.
 - `OPENAI_API_KEY` is optional. Set it only if you want smarter fallback parsing for Quick Entry
-  sentences the rule parser can't understand — the app works fully without it.
+  sentences the rule parser can't understand, and an AI-written end-of-day summary on the Hisaab
+  page — the app works fully without it, using a deterministic template for the summary instead.
 - One free Postgres connection string is required for deploy and local persistence. Neon is the documented default and has a no-card free tier.
 - No login is included for the demo. The app opens straight to Dashboard.
 
@@ -88,7 +89,7 @@ npm run seed
 - Supplier Detail: supplier passbook, credit/payment entries, due dates.
 - Inventory: item name, quantity, purchase price, selling price; add/edit items, a +/- quantity
   stepper, and a red "Kam stock!" badge when quantity is 5 or below. No barcodes, no categories.
-- Daily Hisaab: date picker, daily totals, and daily transaction list.
+- Daily Hisaab: date picker, daily totals, daily transaction list, and a "Din ka Summary" card.
 
 ## Quick Entry (Dashboard)
 
@@ -107,6 +108,25 @@ and Quick Entry turns it into a customer transaction:
 
 See `AGENTS.md` for the full parsing contract.
 
+## AI End-of-Day Summary (Hisaab)
+
+The Hisaab page's "Din ka Summary" card is a short Hinglish paragraph covering the day's udhaar
+given, payments received, customers whose udhaar has been outstanding for more than 15 days, and
+any low-stock inventory items.
+
+- It is fetched client-side from `GET /api/hisaab-summary` **after** the page has already rendered
+  — the report cards and transaction list never wait on it, so the page is never blocked by
+  `OPENAI_API_KEY` being set, unset, slow, or down.
+- If `OPENAI_API_KEY` is set, the route asks an LLM to turn that day's numbers into a natural
+  paragraph (`lib/hisaab-summary-llm.ts`). Any failure there falls straight through to the
+  deterministic path — never a broken card.
+- If no key is set (or the LLM call fails), the same data is turned into a paragraph by a plain
+  template (`buildTemplatedSummary` in `lib/hisaab-summary.ts`), so the feature is fully usable
+  with zero API keys.
+- The card shows which path produced the text ("AI summary" vs "Auto summary").
+
+See `AGENTS.md` for the full contract, including how "udhaar older than 15 days" is defined.
+
 ## How Codex Built This
 
 - Planning was written outside the app code in `PLANS.md` before feature work.
@@ -124,4 +144,5 @@ See `AGENTS.md` for the full parsing contract.
 5. Open a Customer Detail page, add `Udhaar Diya`, then add a larger `Payment Liya`.
 6. Show the balance flip automatically from `Udhaar` to `Advance` and copy the reminder.
 7. Open Inventory, tap the +/- stepper on a low-stock item, and show the "Kam stock!" badge.
-8. Open Suppliers and Daily Hisaab to show overdue dena and end-of-day tally.
+8. Open Suppliers, then Daily Hisaab, to show overdue dena, the end-of-day tally, and the
+   "Din ka Summary" card writing itself in below the totals.
