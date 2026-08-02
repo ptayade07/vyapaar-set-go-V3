@@ -17,6 +17,7 @@ const navItems = [
   { href: "/", label: "Dashboard" },
   { href: "/customers", label: "Khata" },
   { href: "/suppliers", label: "Suppliers" },
+  { href: "/inventory", label: "Inventory" },
   { href: "/hisaab", label: "Hisaab" },
 ];
 
@@ -53,7 +54,7 @@ export default function RootLayout({
             aria-label="Mobile navigation"
             className="fixed inset-x-0 bottom-0 z-30 border-t border-amber-200 bg-[#fffdf7] px-2 py-2 shadow-[0_-8px_30px_rgba(31,39,31,0.08)] md:hidden"
           >
-            <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
+            <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
