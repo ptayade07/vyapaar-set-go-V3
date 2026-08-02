@@ -7,7 +7,7 @@ import { applyCustomerEntry, applySupplierEntry } from "@/lib/balance";
 import { optionalText, parseAmountToPaise } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { parseQuickEntryWithLlm } from "@/lib/quick-entry-llm";
-import { parseQuickEntryDeterministic, type QuickEntryType } from "@/lib/quick-entry";
+import { MAX_QUICK_ENTRY_AMOUNT_PAISE, parseQuickEntryDeterministic, type QuickEntryType } from "@/lib/quick-entry";
 
 export async function createCustomer(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
@@ -147,7 +147,11 @@ export async function parseQuickEntry(text: string): Promise<QuickEntryParsePayl
     return { ...ruleResult, source: "rule" };
   }
 
-  const amountPaise = llmResult.amountPaise ?? ruleResult.amountPaise;
+  const llmAmountPaise =
+    llmResult.amountPaise !== null && llmResult.amountPaise <= MAX_QUICK_ENTRY_AMOUNT_PAISE
+      ? llmResult.amountPaise
+      : null;
+  const amountPaise = llmAmountPaise ?? ruleResult.amountPaise;
   const type = llmResult.type ?? ruleResult.type;
   const nameGuess = llmResult.customerName ?? ruleResult.customerName;
   const matchedCustomer = nameGuess
@@ -179,8 +183,12 @@ export async function confirmQuickEntry(payload: {
   if (!customerName) {
     throw new Error("Customer name is required.");
   }
-  if (!Number.isInteger(payload.amountPaise) || payload.amountPaise <= 0) {
-    throw new Error("Amount must be a positive integer paise value.");
+  if (
+    !Number.isInteger(payload.amountPaise) ||
+    payload.amountPaise <= 0 ||
+    payload.amountPaise > MAX_QUICK_ENTRY_AMOUNT_PAISE
+  ) {
+    throw new Error("Amount must be a positive paise value under the quick-entry limit.");
   }
   if (!["UDHAAR", "PAYMENT", "ADVANCE"].includes(payload.type)) {
     throw new Error("Invalid customer transaction type.");

@@ -74,4 +74,12 @@ describe("quick-entry deterministic parser", () => {
     expect(result.type).toBeNull();
     expect(result.complete).toBe(false);
   });
+
+  it("rejects an unrealistically large amount instead of overflowing", () => {
+    // A digit-bearing name (or a stray long number) must never produce a runaway paise value.
+    const result = parseQuickEntryDeterministic("Chotu1785688809637 se 175 payment liya", knownCustomers);
+
+    expect(result.amountPaise).toBeNull();
+    expect(result.complete).toBe(false);
+  });
 });

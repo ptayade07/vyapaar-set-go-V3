@@ -24,6 +24,10 @@ const TYPE_RULES: { pattern: RegExp; type: QuickEntryType }[] = [
 
 const AMOUNT_PATTERN = /₹?\s*(\d[\d,]*(?:\.\d{1,2})?)/;
 
+// Comfortably above any real single kirana/shop entry, and well inside Postgres's 32-bit Int
+// column range (max ~₹2.14 crore in paise) so a stray large number never overflows on save.
+export const MAX_QUICK_ENTRY_AMOUNT_PAISE = 10_00_000 * 100;
+
 const STOPWORDS = new Set([
   "ko",
   "se",
@@ -49,7 +53,10 @@ export function extractAmountPaise(text: string): number | null {
   const numeric = Number(match[1].replace(/,/g, ""));
   if (!Number.isFinite(numeric) || numeric <= 0) return null;
 
-  return Math.round(numeric * 100);
+  const amountPaise = Math.round(numeric * 100);
+  if (amountPaise > MAX_QUICK_ENTRY_AMOUNT_PAISE) return null;
+
+  return amountPaise;
 }
 
 export function extractType(text: string): QuickEntryType | null {
