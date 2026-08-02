@@ -1,3 +1,4 @@
+import { HisaabAiSummary } from "@/components/hisaab-ai-summary";
 import { getCustomerTransactionLabel } from "@/components/transaction-label";
 import { formatDateIst, formatMoneyPaise, getIstDayRange, getTodayInputValue } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -56,6 +57,8 @@ export default async function HisaabPage({ searchParams }: Props) {
         <ReportCard title="Advance Collected" subtitle="Paid ahead" amount={advances} />
         <ReportCard title="Net for Day" subtitle="Cash minus udhaar" amount={net} />
       </section>
+
+      <HisaabAiSummary date={selectedDate} />
 
       <section className="rounded-lg border border-amber-200 bg-white p-4 shadow-sm">
         <h2 className="text-xl font-black text-[#1f271f]">Transactions</h2>
