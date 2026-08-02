@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BalanceBadge } from "@/components/balance-badge";
+import { QuickEntry } from "@/components/quick-entry";
 import { getCustomerTransactionLabel, getSupplierTransactionLabel } from "@/components/transaction-label";
 import { formatMoneyPaise, formatTimeIst, getIstDayRange, getTodayInputValue } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -85,6 +86,8 @@ export default async function DashboardPage() {
         <QuickAction href="/customers#add-customer" label="+ New Customer" subtitle="Naya khata kholo" />
         <QuickAction href="/suppliers#add-supplier" label="+ New Supplier" subtitle="Supplier jodo" />
       </section>
+
+      <QuickEntry />
 
       <section className="rounded-lg border border-amber-200 bg-white p-4 shadow-sm">
         <div className="mb-3 flex items-center justify-between gap-3">
