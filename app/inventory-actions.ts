@@ -59,18 +59,18 @@ export async function adjustInventoryQuantity(itemId: string, delta: number) {
     throw new Error("Quantity delta must be a non-zero whole number.");
   }
 
-  await prisma.$transaction(async (tx) => {
-    const item = await tx.inventoryItem.findUniqueOrThrow({
-      where: { id: itemId },
-      select: { quantity: true },
-    });
-    const quantity = Math.max(0, item.quantity + delta);
+  // A read-then-write (SELECT then UPDATE) would race under concurrent taps: two overlapping
+  // requests can both read the same starting quantity and one increment gets lost. A single
+  // atomic UPDATE lets Postgres's row lock serialize concurrent adjustments correctly.
+  const updated = await prisma.$executeRaw`
+    UPDATE "InventoryItem"
+    SET quantity = GREATEST(0, quantity + ${delta}), "updatedAt" = now()
+    WHERE id = ${itemId}
+  `;
 
-    await tx.inventoryItem.update({
-      where: { id: itemId },
-      data: { quantity },
-    });
-  });
+  if (updated === 0) {
+    throw new Error("Inventory item not found.");
+  }
 
   revalidatePath("/inventory");
 }
