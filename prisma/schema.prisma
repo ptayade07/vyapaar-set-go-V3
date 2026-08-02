@@ -74,3 +74,15 @@ model SupplierTransaction {
   @@index([createdAt])
   @@index([dueDate])
 }
+
+model InventoryItem {
+  id                 String   @id @default(cuid())
+  name               String
+  quantity           Int      @default(0)
+  purchasePricePaise Int
+  sellingPricePaise  Int
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([name])
+}
