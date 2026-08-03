@@ -2,11 +2,10 @@
 
 ## Prerequisites
 
-- No OpenAI API key is needed. The MVP is pure CRUD plus deterministic balance math, and the
-  Dashboard's Quick Entry box parses Hinglish sentences with a deterministic rule parser first.
-- `OPENAI_API_KEY` is optional. Set it only if you want smarter fallback parsing for Quick Entry
-  sentences the rule parser can't understand, and an AI-written end-of-day summary on the Hisaab
-  page — the app works fully without it, using a deterministic template for the summary instead.
+- No OpenAI API key is needed. The MVP is pure CRUD plus deterministic balance math.
+- `OPENAI_API_KEY` is optional. Set it only if you want an AI-written end-of-day summary on the
+  Hisaab page — the app works fully without it, using a deterministic template for the summary
+  instead.
 - One free Postgres connection string is required for deploy and local persistence. Neon is the documented default and has a no-card free tier.
 - The app opens behind a 4-digit PIN lock (default `1234`, changeable only by editing the
   `AppSetting` row directly for now). This is a single shared household-device lock, not per-user
@@ -89,7 +88,8 @@ npm run seed
 
 - Lock: 4-digit PIN keypad gating every other screen (session cookie, default PIN `1234`).
 - Dashboard: summary cards, a "Kal kya bacha?" aging card (7/15/30-day overdue-customer buckets),
-  Quick Entry sentence box, today's due reminders, recent transactions, and quick actions.
+  a Quick Entry bar (customer autocomplete + Udhaar/Payment + amount), today's due reminders,
+  recent transactions, and quick actions.
 - Customers: searchable khata list with `?aging=` day-count filtering and badges, and add-customer
   form.
 - Customer Detail: passbook-style history with receipt-photo thumbnails, signed balance, entry
@@ -105,20 +105,10 @@ npm run seed
 
 ## Quick Entry (Dashboard)
 
-Type one Hinglish sentence — e.g. "Ramesh ko 250 ka udhaar" or "Sunita se 500 payment liya" —
-and Quick Entry turns it into a customer transaction:
-
-1. A deterministic rule parser (`backend/lib/quick-entry.ts`) always runs first: it extracts an amount,
-   a type keyword (`udhaar` / `payment` / `advance`, with `liya`/`diya` as fallback keywords), and
-   a customer name, preferring a match against your existing customers. No API key required.
-2. If that parse is incomplete and `OPENAI_API_KEY` is set, an LLM fallback (`backend/lib/quick-entry-llm.ts`)
-   fills in the gaps. It fails closed on any error, so a missing or misbehaving key never breaks
-   the deterministic path.
-3. Nothing is saved automatically. A confirmation card always shows the parsed customer, amount,
-   and entry type first. If the customer doesn't exist yet, the card offers to create them inline
-   as part of the same confirm step.
-
-See `AGENTS.md` for the full parsing contract.
+A fast path for entries against customers you already have: type a name or phone number into the
+autocomplete, pick the suggested customer, choose `Udhaar` or `Payment`, enter the amount, and
+save — no page navigation, no confirmation step. New customers aren't created from here; use the
+Customers screen's "+ Add" form for that. See `AGENTS.md` for the full contract.
 
 ## AI End-of-Day Summary (Hisaab)
 
@@ -150,8 +140,7 @@ See `AGENTS.md` for the full contract, including how "udhaar older than 15 days"
 ## Demo Video Script
 
 1. Open Dashboard and show Total Udhaar, Advance, Aaj ka Hisaab, and Supplier Dena.
-2. Type "Ramesh ko 250 ka udhaar" into Quick Entry, show the confirmation card, and confirm.
-3. Type a sentence for a new customer, show the inline "create + save" offer, and confirm.
+2. Use Quick Entry: pick a customer from the autocomplete, choose Udhaar, enter ₹250, and save.
 4. Open Customers, search a name, and show red/green/grey khata balances.
 5. Open a Customer Detail page, add `Udhaar Diya`, then add a larger `Payment Liya`.
 6. Show the balance flip automatically from `Udhaar` to `Advance` and copy the reminder.

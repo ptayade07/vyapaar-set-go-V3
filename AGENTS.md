@@ -24,28 +24,18 @@ Supplier balances are also stored as signed paise, from the shopkeeper's point o
 - `Maal Liya` increases supplier balance by the amount.
 - `Payment Diya` decreases supplier balance by the amount.
 
-## Quick Entry Parsing Contract
+## Quick Entry Contract
 
-The Dashboard quick-entry box turns one Hinglish sentence (e.g. "Ramesh ko 250 ka udhaar") into a
-customer transaction. Only customer entries (`UDHAAR` / `PAYMENT` / `ADVANCE`) are supported here —
-suppliers are not parsed from free text.
+The Dashboard's Quick Entry bar (`frontend/components/quick-entry.tsx`) is a customer-only fast
+path: search-and-pick a customer by name/phone (autocomplete over the customers already loaded on
+the Dashboard, max 6 suggestions), pick `Udhaar`/`Payment`, enter an amount, and save — no
+confirmation step, it writes immediately via `addCustomerEntry`. Suppliers are not entered here.
 
-- The deterministic rule parser (`backend/lib/quick-entry.ts`) always runs first: it has no external
-  dependency and needs no API key. It extracts an amount, a type keyword, and a customer name
-  (preferring an exact match against existing customers), and reports whether the parse is
-  `complete` (amount + type + a customer name all present).
-- The LLM fallback (`backend/lib/quick-entry-llm.ts`) only runs when the rule parser's result is
-  **not** complete AND `process.env.OPENAI_API_KEY` is set. It must fail closed: any network
-  error, non-200 response, or malformed JSON returns `null` rather than throwing, so a missing or
-  misbehaving key never breaks the deterministic path.
-- A parse is never auto-saved. The server always returns a parsed payload for the client to render
-  as a confirmation card; the shopkeeper must explicitly confirm before `confirmQuickEntry` writes
-  anything.
-- If the parsed customer name does not match an existing customer, `customerId` is `null` and the
-  confirmation card offers to create that customer inline as part of the same confirm action —
-  never silently.
-- If the parse is incomplete after both stages, no confirmation card is shown; the shopkeeper is
-  pointed at the manual entry form instead of guessing.
+- No customer can be created from Quick Entry — the shopkeeper must pick an existing customer
+  (matches V2E: this bar is for speed against known customers, not onboarding new ones).
+- Advance is intentionally not offered here — only `UDHAAR`/`PAYMENT`, mirroring V2E's own
+  Quick Entry bar. A shopkeeper taking an advance uses the full Customer Detail flow instead.
+- This does not use any AI/LLM parsing — it is a plain autocomplete form, not a sentence parser.
 
 ## Inventory Contract
 
@@ -112,12 +102,11 @@ uploaded via `uploadTransactionPhoto` in `backend/actions/actions.ts` to Vercel 
 
 - This follows the same fail-safe posture as the optional AI features: if
   `process.env.BLOB_READ_WRITE_TOKEN` is unset, `uploadTransactionPhoto` returns
-  `{ ok: false, reason: "not_configured" }` instead of throwing, and `EntryForm`'s `allowPhoto`
-  prop (computed server-side from the same env check) hides the attach-photo control entirely — no
-  broken upload button, no 500.
-- Uploads are capped at 8MB and restricted to a fixed image MIME whitelist
-  (jpeg/png/gif/webp/heic), matching the Quick Entry amount cap's pattern of validating at the
-  boundary rather than trusting client input.
+  `{ ok: false, reason: "not_configured" }` instead of throwing, and the `allowPhoto` prop passed
+  into `CustomerTxnButtons`/`QuickTxnModal` (computed server-side from the same env check) hides
+  the attach-photo control entirely — no broken upload button, no 500.
+- Uploads are capped at 8MB and restricted to a fixed image MIME whitelist (jpeg/png/gif/webp/heic),
+  validated at the boundary rather than trusting client input.
 - Supplier transactions do not support photos — this is a customer-passbook feature only.
 
 ## Hisaab AI Summary Contract
@@ -135,10 +124,9 @@ or misbehaving OpenAI call can only delay the summary card, never the rest of th
   old-udhaar customers, low-stock items via [[Inventory Contract]]'s `isLowStock`) regardless of
   whether an API key is present.
 - If `OPENAI_API_KEY` is set, `backend/lib/hisaab-summary-llm.ts` turns that data into a short Hinglish
-  paragraph. It must fail closed exactly like the quick-entry LLM fallback: any network error,
-  non-200 response, or empty content falls straight through to the deterministic template — never
-  a 500, never a blank card.
+  paragraph. It must fail closed: any network error, non-200 response, or empty content falls
+  straight through to the deterministic template — never a 500, never a blank card.
 - If no key is set, `buildTemplatedSummary` in `backend/lib/hisaab-summary.ts` builds the same paragraph
   deterministically from the identical data, so the feature is fully usable with zero API keys.
 - The response always reports which path produced it (`"ai"` or `"template"`) so the UI can be
-  transparent about the source, matching the Quick Entry confirmation card's existing convention.
+  transparent about the source.

@@ -29,7 +29,7 @@ export default async function DashboardPage() {
     debtors,
     todayReminders,
   ] = await Promise.all([
-    prisma.customer.findMany({ select: { balancePaise: true } }),
+    prisma.customer.findMany({ select: { id: true, name: true, phone: true, balancePaise: true } }),
     prisma.supplier.findMany({ select: { balancePaise: true } }),
     prisma.customerTransaction.findMany({
       where: { createdAt: { gte: start, lt: end } },
@@ -113,7 +113,7 @@ export default async function DashboardPage() {
         <T as="p" className="mt-1 text-gray-500" hi="Aaj ka hisaab ek nazar mein" en="Your business at a glance" />
       </div>
 
-      <QuickEntry />
+      <QuickEntry customers={customers} />
 
       {agingCounts.some((bucket) => bucket.count > 0) ? (
         <section className="tactile-card p-6" data-testid="card-kal-kya-bacha">
