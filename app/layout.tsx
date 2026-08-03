@@ -58,7 +58,7 @@ export default function RootLayout({
               <form action={lockAction}>
                 <button
                   type="submit"
-                  className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-600"
+                  className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-600"
                 >
                   <LogOut className="h-4 w-4" />
                   Lock karo

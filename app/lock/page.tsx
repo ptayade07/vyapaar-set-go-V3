@@ -80,7 +80,7 @@ export default function LockPage() {
                 type="button"
                 data-testid={`pin-key-${digit}`}
                 onClick={() => pressKey(digit)}
-                className="pin-key h-16 rounded-2xl bg-orange-50 text-xl font-black text-gray-900 hover:bg-orange-100 active:scale-95"
+                className="pin-key h-16 rounded-2xl bg-orange-50 text-xl font-black text-gray-900 hover:bg-orange-100"
               >
                 {digit}
               </button>
@@ -90,7 +90,7 @@ export default function LockPage() {
               type="button"
               data-testid="pin-key-0"
               onClick={() => pressKey("0")}
-              className="pin-key h-16 rounded-2xl bg-orange-50 text-xl font-black text-gray-900 hover:bg-orange-100 active:scale-95"
+              className="pin-key h-16 rounded-2xl bg-orange-50 text-xl font-black text-gray-900 hover:bg-orange-100"
             >
               0
             </button>
@@ -99,7 +99,7 @@ export default function LockPage() {
               data-testid="pin-key-back"
               onClick={pressBackspace}
               aria-label="Backspace"
-              className="pin-key flex h-16 items-center justify-center rounded-2xl bg-orange-50 hover:bg-orange-100 active:scale-95"
+              className="pin-key flex h-16 items-center justify-center rounded-2xl bg-orange-50 hover:bg-orange-100"
             >
               <Delete className="h-5 w-5 text-gray-700" />
             </button>

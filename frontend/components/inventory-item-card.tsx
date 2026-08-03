@@ -50,7 +50,7 @@ export function InventoryItemCard({ item }: Props) {
             name="name"
             defaultValue={item.name}
             required
-            className="tap-target rounded-xl border border-gray-300 bg-white px-3 text-base focus:outline-none focus:ring-2 focus:ring-orange-600"
+            className="tap-target rounded-xl border border-gray-300 bg-white px-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-600"
           />
         </label>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -64,7 +64,7 @@ export function InventoryItemCard({ item }: Props) {
               inputMode="decimal"
               defaultValue={(item.purchasePricePaise / 100).toFixed(2)}
               required
-              className="tap-target rounded-xl border border-gray-300 bg-white px-3 text-lg font-black focus:outline-none focus:ring-2 focus:ring-orange-600"
+              className="tap-target rounded-xl border border-gray-300 bg-white px-3 text-lg font-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-600"
             />
           </label>
           <label className="grid gap-2 text-sm font-bold text-gray-700">
@@ -77,7 +77,7 @@ export function InventoryItemCard({ item }: Props) {
               inputMode="decimal"
               defaultValue={(item.sellingPricePaise / 100).toFixed(2)}
               required
-              className="tap-target rounded-xl border border-gray-300 bg-white px-3 text-lg font-black focus:outline-none focus:ring-2 focus:ring-orange-600"
+              className="tap-target rounded-xl border border-gray-300 bg-white px-3 text-lg font-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-600"
             />
           </label>
         </div>

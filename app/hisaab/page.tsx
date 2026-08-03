@@ -54,7 +54,7 @@ export default async function HisaabPage({ searchParams }: Props) {
               name="date"
               type="date"
               defaultValue={selectedDate}
-              className="tap-target min-w-0 flex-1 rounded-xl border border-gray-300 px-3 text-base font-bold focus:outline-none focus:ring-2 focus:ring-orange-600"
+              className="tap-target min-w-0 flex-1 rounded-xl border border-gray-300 px-3 text-base font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-600"
             />
             <button className="tap-target rounded-xl bg-orange-600 px-4 font-black text-white hover:bg-orange-700">
               Show

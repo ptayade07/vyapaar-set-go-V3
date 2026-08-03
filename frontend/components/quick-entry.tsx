@@ -85,7 +85,7 @@ export function QuickEntry() {
           }}
           placeholder="Ramesh ko 250 ka udhaar"
           aria-label="Quick entry sentence"
-          className="tap-target min-w-0 flex-1 rounded-xl border border-gray-300 px-3 text-base focus:outline-none focus:ring-2 focus:ring-orange-600"
+          className="tap-target min-w-0 flex-1 rounded-xl border border-gray-300 px-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-600"
         />
         <button
           type="button"

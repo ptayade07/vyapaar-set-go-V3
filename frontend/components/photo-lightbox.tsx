@@ -15,7 +15,7 @@ export function PhotoThumbnail({ src, alt }: ThumbnailProps) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-600"
+        className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-600"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={src} alt={alt} className="h-full w-full object-cover" />

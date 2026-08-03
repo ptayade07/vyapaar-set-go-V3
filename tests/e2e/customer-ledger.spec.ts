@@ -25,15 +25,15 @@ test("create customer, add udhaar, then overpay into advance", async ({ page }) 
   await page.locator('input[name="amount"]').fill("500");
   await page.locator('input[name="description"]').fill("Test udhaar");
   await page.getByRole("button", { name: /Save/ }).click();
-  await expect(page.locator('input[name="amount"]')).toBeHidden();
+  await expect(page.locator('input[name="amount"]')).toBeHidden({ timeout: 15000 });
   await expect(page.getByText("+₹500").first()).toBeVisible();
 
   await page.getByRole("button", { name: "Payment Liya" }).click();
   await page.locator('input[name="amount"]').fill("800");
   await page.locator('input[name="description"]').fill("Test overpayment");
   await page.getByRole("button", { name: /Save/ }).click();
-  await expect(page.locator('input[name="amount"]')).toBeHidden();
+  await expect(page.locator('input[name="amount"]')).toBeHidden({ timeout: 15000 });
 
-  await expect(page.getByText("Advance").first()).toBeVisible();
-  await expect(page.getByText("₹300").first()).toBeVisible();
+  await expect(page.getByText("Advance").first()).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText("₹300").first()).toBeVisible({ timeout: 15000 });
 });

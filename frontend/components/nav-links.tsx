@@ -29,7 +29,7 @@ export function SidebarNavLinks() {
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center gap-3 rounded-xl px-4 py-3 text-base font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-orange-600 ${
+            className={`flex items-center gap-3 rounded-xl px-4 py-3 text-base font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-600 ${
               active ? "bg-orange-50 text-orange-700" : "text-gray-700 hover:bg-orange-50/60"
             }`}
           >
@@ -56,7 +56,7 @@ export function MobileNavLinks() {
           <Link
             key={item.href}
             href={item.href}
-            className={`tap-target flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-medium focus:outline-none focus:ring-2 focus:ring-orange-600 ${
+            className={`tap-target flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-600 ${
               active ? "text-orange-700" : "text-gray-500"
             }`}
           >
