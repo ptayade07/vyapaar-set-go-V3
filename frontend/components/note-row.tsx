@@ -1,5 +1,6 @@
 "use client";
 
+import { Bell, Check, Trash2 } from "lucide-react";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteNote, toggleNote } from "@/backend/actions/notes-actions";
@@ -29,6 +30,7 @@ export function NoteRow({ note }: Props) {
   }
 
   function handleDelete() {
+    if (!window.confirm("Delete this note?")) return;
     startTransition(async () => {
       await deleteNote(note.id);
       router.refresh();
@@ -37,7 +39,7 @@ export function NoteRow({ note }: Props) {
 
   return (
     <div
-      className={`tactile-card grid grid-cols-[auto_1fr_auto] items-start gap-3 p-4 ${due ? "border-orange-300" : ""} ${
+      className={`tactile-card flex items-start gap-3 p-5 ${due ? "border-orange-300" : ""} ${
         note.done ? "opacity-50" : ""
       }`}
     >
@@ -46,28 +48,28 @@ export function NoteRow({ note }: Props) {
         onClick={handleToggle}
         disabled={isPending}
         aria-label={note.done ? "Mark not done" : "Mark done"}
-        className={`tap-target flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 text-sm font-black ${
-          note.done ? "border-green-600 bg-green-600 text-white" : "border-gray-300 bg-white"
+        className={`mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 ${
+          note.done ? "border-green-600 bg-green-600 text-white" : "border-gray-300 hover:border-orange-400"
         }`}
       >
-        {note.done ? "✓" : ""}
+        {note.done ? <Check className="h-4 w-4" /> : null}
       </button>
-      <div className="min-w-0">
-        <p className={`font-black text-gray-900 ${note.done ? "line-through" : ""}`}>{note.title}</p>
-        {note.text ? <p className="text-sm text-gray-600">{note.text}</p> : null}
+      <div className="min-w-0 flex-1">
+        <p className={`text-lg font-bold ${note.done ? "text-gray-500 line-through" : "text-gray-900"}`}>{note.title}</p>
+        {note.text ? <p className="mt-1 text-sm text-gray-600">{note.text}</p> : null}
         <div className="mt-2 flex flex-wrap gap-2">
           {note.customer ? (
-            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-700">
+            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
               👤 {note.customer.name}
             </span>
           ) : null}
           {note.reminderDate ? (
             <span
-              className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
                 due ? "bg-orange-100 text-orange-700" : "bg-gray-100 text-gray-600"
               }`}
             >
-              {formatDateIst(note.reminderDate)}
+              <Bell className="h-3 w-3" /> {formatDateIst(note.reminderDate)}
             </span>
           ) : null}
         </div>
@@ -77,9 +79,9 @@ export function NoteRow({ note }: Props) {
         onClick={handleDelete}
         disabled={isPending}
         aria-label="Delete note"
-        className="tap-target rounded-xl px-3 text-sm font-black text-gray-400 hover:bg-red-50 hover:text-red-700"
+        className="text-gray-300 hover:text-red-500"
       >
-        Delete
+        <Trash2 className="h-4 w-4" />
       </button>
     </div>
   );

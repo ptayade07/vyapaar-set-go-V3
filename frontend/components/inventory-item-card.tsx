@@ -1,9 +1,10 @@
 "use client";
 
+import { AlertTriangle, Minus, Plus, Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { InventoryItem } from "@prisma/client";
-import { adjustInventoryQuantity, updateInventoryItem } from "@/backend/actions/inventory-actions";
+import { adjustInventoryQuantity, deleteInventoryItem, updateInventoryItem } from "@/backend/actions/inventory-actions";
 import { Money } from "@/frontend/components/money";
 import { isLowStock } from "@/backend/lib/inventory";
 
@@ -20,6 +21,14 @@ export function InventoryItemCard({ item }: Props) {
   function handleAdjust(delta: number) {
     startTransition(async () => {
       await adjustInventoryQuantity(item.id, delta);
+      router.refresh();
+    });
+  }
+
+  function handleDelete() {
+    if (!window.confirm(`Delete ${item.name}?`)) return;
+    startTransition(async () => {
+      await deleteInventoryItem(item.id);
       router.refresh();
     });
   }
@@ -94,55 +103,57 @@ export function InventoryItemCard({ item }: Props) {
   }
 
   return (
-    <div
-      className={`tactile-card grid gap-3 border-2 p-4 sm:grid-cols-[1fr_auto] ${
-        lowStock ? "border-red-200 bg-red-50" : "border-transparent"
-      }`}
-    >
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="truncate text-xl font-black text-gray-900">{item.name}</p>
+    <div className={`tactile-card flex items-center justify-between gap-4 p-5 ${lowStock ? "border-red-200" : ""}`}>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2 text-lg font-bold text-gray-900">
+          {item.name}
           {lowStock ? (
-            <span className="rounded-full border border-red-100 bg-red-100 px-2 py-0.5 text-xs font-black text-red-700">
-              Kam stock!
+            <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+              <AlertTriangle className="h-3 w-3" /> Kam stock!
             </span>
           ) : null}
         </div>
-        <p className="text-sm font-semibold text-gray-500">
-          Kharid <Money amountPaise={item.purchasePricePaise} /> · Bikri{" "}
-          <Money amountPaise={item.sellingPricePaise} />
-        </p>
+        <div className="font-mono-num mt-1 text-xs text-gray-500">
+          Purchase: <Money amountPaise={item.purchasePricePaise} /> · Selling: <Money amountPaise={item.sellingPricePaise} />
+        </div>
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="mt-2 text-sm font-black text-orange-700 underline-offset-2 hover:underline"
+          className="mt-2 text-xs font-black text-orange-700 underline-offset-2 hover:underline"
         >
           Edit
         </button>
       </div>
-      <div className="flex items-center gap-3 self-center">
+      <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={() => handleAdjust(-1)}
           disabled={isPending || item.quantity <= 0}
           aria-label={`Ghatao ${item.name} quantity`}
-          className="tap-target flex h-12 w-12 items-center justify-center rounded-xl border-2 border-gray-300 bg-white text-2xl font-black text-gray-900 disabled:opacity-40"
+          className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 transition hover:bg-gray-200 active:scale-90 disabled:opacity-40"
         >
-          −
+          <Minus className="h-4 w-4" />
         </button>
-        <p
-          className={`font-mono-num min-w-[3ch] text-center text-2xl font-black ${lowStock ? "text-red-700" : "text-gray-900"}`}
-        >
+        <div className={`font-mono-num min-w-[3rem] text-center text-2xl font-bold ${lowStock ? "text-red-600" : "text-gray-900"}`}>
           {item.quantity}
-        </p>
+        </div>
         <button
           type="button"
           onClick={() => handleAdjust(1)}
           disabled={isPending}
           aria-label={`Badhao ${item.name} quantity`}
-          className="tap-target flex h-12 w-12 items-center justify-center rounded-xl border-2 border-orange-600 bg-orange-600 text-2xl font-black text-white disabled:opacity-40"
+          className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-700 transition hover:bg-orange-200 active:scale-90 disabled:opacity-40"
         >
-          +
+          <Plus className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={isPending}
+          aria-label={`Delete ${item.name}`}
+          className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-gray-300 hover:bg-red-50 hover:text-red-500 disabled:opacity-40"
+        >
+          <Trash2 className="h-4 w-4" />
         </button>
       </div>
     </div>

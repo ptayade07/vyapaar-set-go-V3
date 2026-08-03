@@ -54,6 +54,11 @@ export async function updateInventoryItem(itemId: string, formData: FormData) {
   revalidatePath("/inventory");
 }
 
+export async function deleteInventoryItem(itemId: string) {
+  await prisma.inventoryItem.delete({ where: { id: itemId } });
+  revalidatePath("/inventory");
+}
+
 export async function adjustInventoryQuantity(itemId: string, delta: number) {
   if (!Number.isInteger(delta) || delta === 0) {
     throw new Error("Quantity delta must be a non-zero whole number.");
