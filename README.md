@@ -66,7 +66,7 @@ npm run test:e2e
 
 ## Seed Data
 
-The seed script is `prisma/seed.ts` and is wired through `prisma.seed` in `package.json`.
+The seed script is `backend/prisma/seed.ts` and is wired through `prisma.seed` in `package.json`.
 
 It creates:
 
@@ -108,10 +108,10 @@ npm run seed
 Type one Hinglish sentence — e.g. "Ramesh ko 250 ka udhaar" or "Sunita se 500 payment liya" —
 and Quick Entry turns it into a customer transaction:
 
-1. A deterministic rule parser (`lib/quick-entry.ts`) always runs first: it extracts an amount,
+1. A deterministic rule parser (`backend/lib/quick-entry.ts`) always runs first: it extracts an amount,
    a type keyword (`udhaar` / `payment` / `advance`, with `liya`/`diya` as fallback keywords), and
    a customer name, preferring a match against your existing customers. No API key required.
-2. If that parse is incomplete and `OPENAI_API_KEY` is set, an LLM fallback (`lib/quick-entry-llm.ts`)
+2. If that parse is incomplete and `OPENAI_API_KEY` is set, an LLM fallback (`backend/lib/quick-entry-llm.ts`)
    fills in the gaps. It fails closed on any error, so a missing or misbehaving key never breaks
    the deterministic path.
 3. Nothing is saved automatically. A confirmation card always shows the parsed customer, amount,
@@ -130,10 +130,10 @@ any low-stock inventory items.
   — the report cards and transaction list never wait on it, so the page is never blocked by
   `OPENAI_API_KEY` being set, unset, slow, or down.
 - If `OPENAI_API_KEY` is set, the route asks an LLM to turn that day's numbers into a natural
-  paragraph (`lib/hisaab-summary-llm.ts`). Any failure there falls straight through to the
+  paragraph (`backend/lib/hisaab-summary-llm.ts`). Any failure there falls straight through to the
   deterministic path — never a broken card.
 - If no key is set (or the LLM call fails), the same data is turned into a paragraph by a plain
-  template (`buildTemplatedSummary` in `lib/hisaab-summary.ts`), so the feature is fully usable
+  template (`buildTemplatedSummary` in `backend/lib/hisaab-summary.ts`), so the feature is fully usable
   with zero API keys.
 - The card shows which path produced the text ("AI summary" vs "Auto summary").
 

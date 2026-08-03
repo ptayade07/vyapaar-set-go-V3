@@ -25,11 +25,11 @@ The Dashboard quick-entry box turns one Hinglish sentence (e.g. "Ramesh ko 250 k
 customer transaction. Only customer entries (`UDHAAR` / `PAYMENT` / `ADVANCE`) are supported here —
 suppliers are not parsed from free text.
 
-- The deterministic rule parser (`lib/quick-entry.ts`) always runs first: it has no external
+- The deterministic rule parser (`backend/lib/quick-entry.ts`) always runs first: it has no external
   dependency and needs no API key. It extracts an amount, a type keyword, and a customer name
   (preferring an exact match against existing customers), and reports whether the parse is
   `complete` (amount + type + a customer name all present).
-- The LLM fallback (`lib/quick-entry-llm.ts`) only runs when the rule parser's result is
+- The LLM fallback (`backend/lib/quick-entry-llm.ts`) only runs when the rule parser's result is
   **not** complete AND `process.env.OPENAI_API_KEY` is set. It must fail closed: any network
   error, non-200 response, or malformed JSON returns `null` rather than throwing, so a missing or
   misbehaving key never breaks the deterministic path.
@@ -47,7 +47,7 @@ suppliers are not parsed from free text.
 Inventory is deliberately minimal: item name, quantity, purchase price paise, selling price paise.
 No barcodes, no categories, no per-item transaction history.
 
-- `quantity <= 5` is the single low-stock rule (`lib/inventory.ts`). At or below that threshold, the
+- `quantity <= 5` is the single low-stock rule (`backend/lib/inventory.ts`). At or below that threshold, the
   item row is highlighted red and shows a "Kam stock!" badge. There is no separate "out of stock"
   state — zero is just the lowest value low stock can take.
 - Quantity changes only through the +/- stepper (a signed delta applied server-side), never through
@@ -58,7 +58,7 @@ No barcodes, no categories, no per-item transaction history.
 ## FIFO Udhaar Aging Contract
 
 "How old is a customer's oldest unpaid udhaar" is answered by one function,
-`computeOldestOpenUdhaarDate` in `lib/aging.ts`, used everywhere aging matters (Dashboard's "Kal
+`computeOldestOpenUdhaarDate` in `backend/lib/aging.ts`, used everywhere aging matters (Dashboard's "Kal
 kya bacha?" card, the Customers list's `?aging=` filter and day-badges, and the Hisaab AI summary's
 old-udhaar list).
 
@@ -80,7 +80,7 @@ old-udhaar list).
 The Hisaab page's Cash Milao panel answers "does the drawer match the books" for one calendar day.
 
 - `expectedCashPaise = openingCashPaise + (paymentsTotalPaise + advanceTotalPaise) - supplierPaymentsTodayPaise`
-  (`lib/cash-milao.ts#computeExpectedCashPaise`). Opening cash is a per-date value the shopkeeper
+  (`backend/lib/cash-milao.ts#computeExpectedCashPaise`). Opening cash is a per-date value the shopkeeper
   enters once (`OpeningCash` table, keyed by the same `YYYY-MM-DD` string used everywhere else in
   the app); it is not derived from any ledger.
 - The verdict (`getCashMilaoVerdict`) compares actual counted cash against that expected figure:
@@ -91,11 +91,11 @@ The Hisaab page's Cash Milao panel answers "does the drawer match the books" for
 ## PIN Lock Contract
 
 The app opens behind a 4-digit PIN gate (default `1234`, stored in `AppSetting` and created lazily
-on first read via `lib/pin.ts#getPin`).
+on first read via `backend/lib/pin.ts#getPin`).
 
-- The PIN is verified **server-side only** (`verifyPinAction` in `app/actions.ts`) — unlike a
+- The PIN is verified **server-side only** (`verifyPinAction` in `backend/actions/actions.ts`) — unlike a
   naive client-side comparison, the plaintext PIN never reaches the browser. On a correct guess the
-  action sets an `httpOnly` session cookie (`vsg_unlocked`); `middleware.ts` redirects every route
+  action sets an `httpOnly` session cookie (`vsg_unlocked`); `proxy.ts` redirects every route
   except `/lock` to `/lock` when that cookie is absent.
 - This is a single shared household-device lock, not per-user authentication — there is no
   account system, and locking (`lockAction`) just deletes the cookie and redirects to `/lock`.
@@ -103,7 +103,7 @@ on first read via `lib/pin.ts#getPin`).
 ## Photo Receipt Attachment Contract
 
 Customer transactions may carry an optional receipt photo (`CustomerTransaction.photoUrl`),
-uploaded via `uploadTransactionPhoto` in `app/actions.ts` to Vercel Blob.
+uploaded via `uploadTransactionPhoto` in `backend/actions/actions.ts` to Vercel Blob.
 
 - This follows the same fail-safe posture as the optional AI features: if
   `process.env.BLOB_READ_WRITE_TOKEN` is unset, `uploadTransactionPhoto` returns
@@ -129,11 +129,11 @@ or misbehaving OpenAI call can only delay the summary card, never the rest of th
 - The route always computes the same `HisaabSummaryData` (today's udhaar/payments/advance totals,
   old-udhaar customers, low-stock items via [[Inventory Contract]]'s `isLowStock`) regardless of
   whether an API key is present.
-- If `OPENAI_API_KEY` is set, `lib/hisaab-summary-llm.ts` turns that data into a short Hinglish
+- If `OPENAI_API_KEY` is set, `backend/lib/hisaab-summary-llm.ts` turns that data into a short Hinglish
   paragraph. It must fail closed exactly like the quick-entry LLM fallback: any network error,
   non-200 response, or empty content falls straight through to the deterministic template — never
   a 500, never a blank card.
-- If no key is set, `buildTemplatedSummary` in `lib/hisaab-summary.ts` builds the same paragraph
+- If no key is set, `buildTemplatedSummary` in `backend/lib/hisaab-summary.ts` builds the same paragraph
   deterministically from the identical data, so the feature is fully usable with zero API keys.
 - The response always reports which path produced it (`"ai"` or `"template"`) so the UI can be
   transparent about the source, matching the Quick Entry confirmation card's existing convention.
