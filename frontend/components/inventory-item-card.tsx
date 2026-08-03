@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type { InventoryItem } from "@prisma/client";
 import { adjustInventoryQuantity, deleteInventoryItem, updateInventoryItem } from "@/backend/actions/inventory-actions";
 import { Money } from "@/frontend/components/money";
+import { useT } from "@/frontend/lib/i18n";
 import { isLowStock } from "@/backend/lib/inventory";
 
 type Props = {
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export function InventoryItemCard({ item }: Props) {
+  const t = useT();
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -45,7 +47,7 @@ export function InventoryItemCard({ item }: Props) {
     return (
       <form action={handleSaveEdit} className="tactile-card grid gap-3 border-2 border-orange-200 bg-orange-50 p-4">
         <label className="grid gap-2 text-sm font-bold text-gray-700">
-          Item name
+          {t("Item ka naam", "Item name")}
           <input
             name="name"
             defaultValue={item.name}
@@ -55,7 +57,7 @@ export function InventoryItemCard({ item }: Props) {
         </label>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="grid gap-2 text-sm font-bold text-gray-700">
-            Purchase price
+            {t("Purchase price", "Purchase price")}
             <input
               name="purchasePrice"
               type="number"
@@ -68,7 +70,7 @@ export function InventoryItemCard({ item }: Props) {
             />
           </label>
           <label className="grid gap-2 text-sm font-bold text-gray-700">
-            Selling price
+            {t("Selling price", "Selling price")}
             <input
               name="sellingPrice"
               type="number"
@@ -87,7 +89,7 @@ export function InventoryItemCard({ item }: Props) {
             disabled={isPending}
             className="tap-target flex-1 rounded-xl bg-orange-600 px-4 text-base font-black text-white hover:bg-orange-700 disabled:opacity-50"
           >
-            {isPending ? "Save ho raha hai..." : "Save"}
+            {isPending ? t("Save ho raha hai...", "Saving...") : t("Save", "Save")}
           </button>
           <button
             type="button"
@@ -95,7 +97,7 @@ export function InventoryItemCard({ item }: Props) {
             disabled={isPending}
             className="tap-target rounded-xl border border-gray-300 bg-white px-4 text-base font-black text-gray-700 disabled:opacity-50"
           >
-            Cancel
+            {t("Cancel", "Cancel")}
           </button>
         </div>
       </form>
@@ -109,19 +111,20 @@ export function InventoryItemCard({ item }: Props) {
           {item.name}
           {lowStock ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
-              <AlertTriangle className="h-3 w-3" /> Kam stock!
+              <AlertTriangle className="h-3 w-3" /> {t("Kam stock!", "Low stock!")}
             </span>
           ) : null}
         </div>
         <div className="font-mono-num mt-1 text-xs text-gray-500">
-          Purchase: <Money amountPaise={item.purchasePricePaise} /> · Selling: <Money amountPaise={item.sellingPricePaise} />
+          {t("Kharid", "Purchase")}: <Money amountPaise={item.purchasePricePaise} /> · {t("Bikri", "Selling")}:{" "}
+          <Money amountPaise={item.sellingPricePaise} />
         </div>
         <button
           type="button"
           onClick={() => setEditing(true)}
           className="mt-2 text-xs font-black text-orange-700 underline-offset-2 hover:underline"
         >
-          Edit
+          {t("Edit", "Edit")}
         </button>
       </div>
       <div className="flex items-center gap-2">

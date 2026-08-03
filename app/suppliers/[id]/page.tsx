@@ -6,6 +6,7 @@ import { formatDateIst, formatDateTimeIst } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
 import { Money } from "@/frontend/components/money";
 import { SupplierTxnPanel } from "@/frontend/components/supplier-txn-panel";
+import { T } from "@/frontend/components/t-text";
 import { getSupplierTransactionLabel } from "@/frontend/components/transaction-label";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +36,7 @@ export default async function SupplierDetailPage({ params }: Props) {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <Link href="/suppliers" className="inline-flex items-center gap-2 font-semibold text-orange-700">
-        <ArrowLeft className="h-4 w-4" /> Wapas
+        <ArrowLeft className="h-4 w-4" /> <T hi="Wapas" en="Back" />
       </Link>
 
       <div className="tactile-card p-6">

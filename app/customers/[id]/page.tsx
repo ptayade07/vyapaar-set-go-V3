@@ -10,6 +10,7 @@ import { DeleteTxnButton } from "@/frontend/components/delete-txn-button";
 import { Money } from "@/frontend/components/money";
 import { PhotoThumbnail } from "@/frontend/components/photo-lightbox";
 import { ReminderButton } from "@/frontend/components/reminder-button";
+import { T } from "@/frontend/components/t-text";
 import { getCustomerTransactionLabel } from "@/frontend/components/transaction-label";
 
 export const dynamic = "force-dynamic";
@@ -48,7 +49,7 @@ export default async function CustomerDetailPage({ params }: Props) {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <Link href="/customers" className="inline-flex items-center gap-2 font-semibold text-orange-700">
-        <ArrowLeft className="h-4 w-4" /> Wapas
+        <ArrowLeft className="h-4 w-4" /> <T hi="Wapas" en="Back" />
       </Link>
 
       <div className="tactile-card p-6">
@@ -78,7 +79,7 @@ export default async function CustomerDetailPage({ params }: Props) {
             rel="noreferrer"
             className="tap-target inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 font-semibold text-white transition hover:bg-orange-700 active:scale-95"
           >
-            <FileText className="h-4 w-4" /> Statement download karo
+            <FileText className="h-4 w-4" /> <T hi="Statement download karo" en="Download Statement" />
           </a>
         </div>
       </div>
@@ -92,11 +93,11 @@ export default async function CustomerDetailPage({ params }: Props) {
       <div className="tactile-card overflow-hidden">
         <div className="p-6 pb-2">
           <h2 className="text-xl font-bold text-gray-900">Passbook</h2>
-          <p className="text-sm text-gray-500">Har transaction ki poori history</p>
+          <T as="p" className="text-sm text-gray-500" hi="Har transaction ki poori history" en="Full transaction history" />
         </div>
         <div className="divide-y divide-gray-100">
           {recentFirst.length === 0 ? (
-            <div className="p-6 text-center text-gray-400">Koi transaction nahi hai.</div>
+            <T as="p" className="p-6 text-center text-gray-400" hi="Koi transaction nahi hai." en="No transactions yet." />
           ) : (
             recentFirst.map((transaction) => {
               const meta = getCustomerTransactionLabel(transaction.type);

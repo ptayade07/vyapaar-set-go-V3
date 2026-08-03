@@ -4,6 +4,7 @@ import { createSupplier } from "@/backend/actions/actions";
 import { prisma } from "@/backend/lib/prisma";
 import { AddPersonPanel } from "@/frontend/components/add-person-panel";
 import { BalanceText } from "@/frontend/components/balance-text";
+import { T } from "@/frontend/components/t-text";
 
 export const dynamic = "force-dynamic";
 
@@ -23,14 +24,19 @@ export default async function SuppliersPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <AddPersonPanel
-        title="Suppliers"
-        subtitle="Jinke maal ka paisa dena hai"
-        triggerLabel="Naya Supplier"
+        titleHi="Suppliers"
+        titleEn="Suppliers"
+        subtitleHi="Jinke maal ka paisa dena hai"
+        subtitleEn="Whom you owe"
+        triggerLabelHi="Naya Supplier"
+        triggerLabelEn="Add Supplier"
         action={createSupplier}
       />
 
       <div className="space-y-3">
-        {suppliers.length === 0 ? <div className="py-10 text-center text-gray-400">Koi supplier nahi hai.</div> : null}
+        {suppliers.length === 0 ? (
+          <T as="p" className="py-10 text-center text-gray-400" hi="Koi supplier nahi hai." en="No suppliers yet." />
+        ) : null}
         {suppliers.map((supplier) => {
           const overdue = supplier.balancePaise > 0 && supplier.transactions.length > 0;
           return (

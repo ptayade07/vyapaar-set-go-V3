@@ -2,15 +2,28 @@
 
 import { Plus } from "lucide-react";
 import { useState, useTransition } from "react";
+import { useT } from "@/frontend/lib/i18n";
 
 type Props = {
-  title: string;
-  subtitle: string;
-  triggerLabel: string;
+  titleHi: string;
+  titleEn: string;
+  subtitleHi: string;
+  subtitleEn: string;
+  triggerLabelHi: string;
+  triggerLabelEn: string;
   action: (formData: FormData) => Promise<void> | void;
 };
 
-export function AddPersonPanel({ title, subtitle, triggerLabel, action }: Props) {
+export function AddPersonPanel({
+  titleHi,
+  titleEn,
+  subtitleHi,
+  subtitleEn,
+  triggerLabelHi,
+  triggerLabelEn,
+  action,
+}: Props) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -25,15 +38,15 @@ export function AddPersonPanel({ title, subtitle, triggerLabel, action }: Props)
     <>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
-          <p className="text-sm text-gray-500">{subtitle}</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t(titleHi, titleEn)}</h1>
+          <p className="text-sm text-gray-500">{t(subtitleHi, subtitleEn)}</p>
         </div>
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
           className="tap-target inline-flex items-center gap-2 rounded-2xl bg-orange-600 px-6 font-semibold text-white shadow-md transition hover:bg-orange-700 active:scale-95"
         >
-          <Plus className="h-5 w-5" /> {triggerLabel}
+          <Plus className="h-5 w-5" /> {t(triggerLabelHi, triggerLabelEn)}
         </button>
       </div>
       {open ? (
@@ -41,18 +54,18 @@ export function AddPersonPanel({ title, subtitle, triggerLabel, action }: Props)
           <input
             name="name"
             required
-            placeholder="Naam (required)"
+            placeholder={t("Naam (required)", "Name (required)")}
             className="h-14 w-full rounded-xl border border-gray-200 px-4 text-lg focus:outline-none focus:border-orange-500"
           />
           <input
             name="phone"
             inputMode="tel"
-            placeholder="Phone (optional)"
+            placeholder={t("Phone (optional)", "Phone (optional)")}
             className="h-14 w-full rounded-xl border border-gray-200 px-4 text-lg focus:outline-none focus:border-orange-500"
           />
           <input
             name="note"
-            placeholder="Note (optional)"
+            placeholder={t("Note (optional)", "Note (optional)")}
             className="h-14 w-full rounded-xl border border-gray-200 px-4 text-lg focus:outline-none focus:border-orange-500"
           />
           <div className="flex gap-3">
@@ -61,7 +74,7 @@ export function AddPersonPanel({ title, subtitle, triggerLabel, action }: Props)
               disabled={isPending}
               className="h-14 rounded-2xl bg-orange-600 px-8 font-semibold text-white transition hover:bg-orange-700 active:scale-95 disabled:opacity-50"
             >
-              {isPending ? "Save ho raha hai..." : "Save karo"}
+              {isPending ? t("Save ho raha hai...", "Saving...") : t("Save karo", "Save")}
             </button>
             <button
               type="button"
@@ -69,7 +82,7 @@ export function AddPersonPanel({ title, subtitle, triggerLabel, action }: Props)
               disabled={isPending}
               className="h-14 rounded-2xl bg-gray-100 px-6 font-semibold text-gray-700 disabled:opacity-50"
             >
-              Cancel
+              {t("Cancel", "Cancel")}
             </button>
           </div>
         </form>

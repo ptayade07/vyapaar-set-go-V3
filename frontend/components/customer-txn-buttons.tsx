@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { type CustomerTxnType, QuickTxnModal } from "@/frontend/components/quick-txn-modal";
+import { useT } from "@/frontend/lib/i18n";
 
 type Props = {
   customerName: string;
@@ -10,6 +11,7 @@ type Props = {
 };
 
 export function CustomerTxnButtons({ customerName, action, allowPhoto }: Props) {
+  const t = useT();
   const [modalType, setModalType] = useState<CustomerTxnType | null>(null);
 
   return (
@@ -20,7 +22,7 @@ export function CustomerTxnButtons({ customerName, action, allowPhoto }: Props) 
           onClick={() => setModalType("UDHAAR")}
           className="flex h-24 flex-col items-center justify-center rounded-3xl bg-red-500 font-bold text-white shadow-lg transition hover:bg-red-600 active:scale-95"
         >
-          <span className="text-2xl">Udhaar Diya</span>
+          <span className="text-2xl">{t("Udhaar Diya", "Give Credit")}</span>
           <span className="mt-1 text-xs opacity-80">+ balance</span>
         </button>
         <button
@@ -28,7 +30,7 @@ export function CustomerTxnButtons({ customerName, action, allowPhoto }: Props) 
           onClick={() => setModalType("PAYMENT")}
           className="flex h-24 flex-col items-center justify-center rounded-3xl bg-green-600 font-bold text-white shadow-lg transition hover:bg-green-700 active:scale-95"
         >
-          <span className="text-2xl">Payment Liya</span>
+          <span className="text-2xl">{t("Payment Liya", "Received")}</span>
           <span className="mt-1 text-xs opacity-80">− balance</span>
         </button>
       </div>
@@ -38,7 +40,7 @@ export function CustomerTxnButtons({ customerName, action, allowPhoto }: Props) 
           onClick={() => setModalType("ADVANCE")}
           className="text-sm font-semibold text-blue-700 underline underline-offset-4 hover:text-blue-900"
         >
-          + Advance Liya (customer ne aage ka paisa diya)
+          + {t("Advance Liya (customer ne aage ka paisa diya)", "Advance received")}
         </button>
       </div>
       {modalType ? (

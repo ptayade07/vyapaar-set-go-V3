@@ -1,5 +1,6 @@
 import { AddInventoryPanel } from "@/frontend/components/add-inventory-panel";
 import { InventoryItemCard } from "@/frontend/components/inventory-item-card";
+import { T } from "@/frontend/components/t-text";
 import { isLowStock } from "@/backend/lib/inventory";
 import { prisma } from "@/backend/lib/prisma";
 
@@ -14,16 +15,19 @@ export default async function InventoryPage() {
       <AddInventoryPanel />
 
       {lowStockCount > 0 ? (
-        <p className="text-sm font-semibold text-red-700">
-          {lowStockCount} item{lowStockCount > 1 ? "s" : ""} mein kam stock hai.
-        </p>
+        <T
+          as="p"
+          className="text-sm font-semibold text-red-700"
+          hi={`${lowStockCount} item${lowStockCount > 1 ? "s" : ""} mein kam stock hai.`}
+          en={`${lowStockCount} item${lowStockCount > 1 ? "s" : ""} low on stock.`}
+        />
       ) : null}
 
       <div className="space-y-3">
         {items.length > 0 ? (
           items.map((item) => <InventoryItemCard key={item.id} item={item} />)
         ) : (
-          <div className="py-10 text-center text-gray-400">Koi item nahi hai.</div>
+          <T as="p" className="py-10 text-center text-gray-400" hi="Koi item nahi hai." en="No items yet." />
         )}
       </div>
     </div>

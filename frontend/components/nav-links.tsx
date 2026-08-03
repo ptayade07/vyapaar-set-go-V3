@@ -3,6 +3,7 @@
 import { Calculator, Home, Package, StickyNote, Truck, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLang } from "@/frontend/lib/i18n";
 
 const navItems = [
   { href: "/", labelHi: "Dashboard", labelEn: "Dashboard", icon: Home },
@@ -20,6 +21,7 @@ function isActive(pathname: string, href: string) {
 
 export function SidebarNavLinks() {
   const pathname = usePathname();
+  const { lang } = useLang();
 
   return (
     <>
@@ -35,8 +37,8 @@ export function SidebarNavLinks() {
           >
             <item.icon className="h-5 w-5" />
             <span className="flex flex-col leading-tight">
-              <span>{item.labelHi}</span>
-              <span className="text-[10px] font-normal text-gray-400">{item.labelEn}</span>
+              <span>{lang === "en" ? item.labelEn : item.labelHi}</span>
+              {lang !== "en" ? <span className="text-[10px] font-normal text-gray-400">{item.labelEn}</span> : null}
             </span>
           </Link>
         );
@@ -47,6 +49,7 @@ export function SidebarNavLinks() {
 
 export function MobileNavLinks() {
   const pathname = usePathname();
+  const { lang } = useLang();
 
   return (
     <>
@@ -61,7 +64,7 @@ export function MobileNavLinks() {
             }`}
           >
             <item.icon className="h-5 w-5" />
-            {item.labelHi}
+            {lang === "en" ? item.labelEn : item.labelHi}
           </Link>
         );
       })}

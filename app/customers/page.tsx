@@ -5,13 +5,14 @@ import { computeOldestOpenUdhaarDate, daysBetweenNow } from "@/backend/lib/aging
 import { prisma } from "@/backend/lib/prisma";
 import { AddPersonPanel } from "@/frontend/components/add-person-panel";
 import { BalanceText } from "@/frontend/components/balance-text";
+import { T } from "@/frontend/components/t-text";
 
 export const dynamic = "force-dynamic";
 
 const SORT_OPTIONS = [
-  { key: "udhaar", label: "Sabse zyada udhaar", icon: ArrowDownWideNarrow },
-  { key: "recent", label: "Recent", icon: Clock },
-  { key: "az", label: "A-Z", icon: ArrowDownAZ },
+  { key: "udhaar", labelHi: "Sabse zyada udhaar", labelEn: "Highest Udhaar", icon: ArrowDownWideNarrow },
+  { key: "recent", labelHi: "Recent", labelEn: "Recent", icon: Clock },
+  { key: "az", labelHi: "A-Z", labelEn: "A-Z", icon: ArrowDownAZ },
 ] as const;
 
 type Props = {
@@ -62,9 +63,12 @@ export default async function CustomersPage({ searchParams }: Props) {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <AddPersonPanel
-        title="Grahak (Khata)"
-        subtitle="Sab customers ki list"
-        triggerLabel="Naya Grahak"
+        titleHi="Grahak (Khata)"
+        titleEn="Customers"
+        subtitleHi="Sab customers ki list"
+        subtitleEn="All customers"
+        triggerLabelHi="Naya Grahak"
+        triggerLabelEn="Add Customer"
         action={createCustomer}
       />
 
@@ -73,14 +77,16 @@ export default async function CustomersPage({ searchParams }: Props) {
         <input
           name="q"
           defaultValue={query}
-          placeholder="Naam ya phone se search karo"
+          placeholder="Naam ya phone se search karo / Search by name or phone"
           className="h-14 w-full rounded-2xl border border-gray-200 bg-white pl-12 pr-4 text-lg focus:outline-none focus:border-orange-500"
         />
       </form>
 
       {agingThreshold === null ? (
         <div className="flex flex-wrap gap-2">
-          <span className="mr-1 self-center text-xs font-semibold text-gray-500">Sort:</span>
+          <span className="mr-1 self-center text-xs font-semibold text-gray-500">
+            <T hi="Sort:" en="Sort:" />
+          </span>
           {SORT_OPTIONS.map((option) => (
             <Link
               key={option.key}
@@ -92,7 +98,7 @@ export default async function CustomersPage({ searchParams }: Props) {
               }`}
             >
               <option.icon className="h-3.5 w-3.5" />
-              {option.label}
+              <T hi={option.labelHi} en={option.labelEn} />
             </Link>
           ))}
         </div>
@@ -101,21 +107,33 @@ export default async function CustomersPage({ searchParams }: Props) {
           <div className="flex items-center gap-3">
             <Clock className="h-5 w-5 text-amber-700" />
             <div>
-              <div className="font-bold text-gray-900">{agingThreshold}+ din se udhaar</div>
-              <div className="text-xs text-gray-600">{visible.length} grahak — purane pehle</div>
+              <T
+                as="p"
+                className="font-bold text-gray-900"
+                hi={`${agingThreshold}+ din se udhaar`}
+                en={`${agingThreshold}+ days old`}
+              />
+              <T
+                as="p"
+                className="text-xs text-gray-600"
+                hi={`${visible.length} grahak — purane pehle`}
+                en={`${visible.length} customers — oldest first`}
+              />
             </div>
           </div>
           <Link
             href="/customers"
             className="inline-flex h-9 items-center gap-1 rounded-full border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-700 hover:border-orange-300"
           >
-            <X className="h-3.5 w-3.5" /> Filter clear
+            <X className="h-3.5 w-3.5" /> <T hi="Filter clear" en="Clear" />
           </Link>
         </div>
       )}
 
       <div className="space-y-3">
-        {visible.length === 0 ? <div className="py-10 text-center text-gray-400">Koi grahak nahi mila.</div> : null}
+        {visible.length === 0 ? (
+          <T as="p" className="py-10 text-center text-gray-400" hi="Koi grahak nahi mila." en="No customers found." />
+        ) : null}
         {visible.map((customer) => (
           <Link
             key={customer.id}
@@ -140,7 +158,8 @@ export default async function CustomersPage({ searchParams }: Props) {
                           : "bg-yellow-100 text-yellow-800"
                     }`}
                   >
-                    <Clock className="h-3 w-3" /> {customer.oldestUdhaarDays} din purana
+                    <Clock className="h-3 w-3" />{" "}
+                    <T hi={`${customer.oldestUdhaarDays} din purana`} en={`${customer.oldestUdhaarDays} days old`} />
                   </span>
                 </div>
               ) : null}

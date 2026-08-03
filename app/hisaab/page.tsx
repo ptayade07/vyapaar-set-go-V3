@@ -1,6 +1,7 @@
 import { CashMilao } from "@/frontend/components/cash-milao";
 import { HisaabAiSummary } from "@/frontend/components/hisaab-ai-summary";
 import { Money } from "@/frontend/components/money";
+import { T } from "@/frontend/components/t-text";
 import { getCustomerTransactionLabel } from "@/frontend/components/transaction-label";
 import { formatDateIst, getIstDayRange, getTodayInputValue } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
@@ -42,13 +43,13 @@ export default async function HisaabPage({ searchParams }: Props) {
   return (
     <div className="grid gap-5">
       <section>
-        <p className="text-sm font-black uppercase tracking-wide text-orange-700">End-of-day tally</p>
-        <h1 className="text-3xl font-black text-gray-900">Aaj ka Hisaab</h1>
+        <T as="p" className="text-sm font-black uppercase tracking-wide text-orange-700" hi="End-of-day tally" en="End-of-day tally" />
+        <T as="h1" className="text-3xl font-black text-gray-900" hi="Aaj ka Hisaab" en="Daily Report" />
       </section>
 
       <form action="/hisaab" className="tactile-card p-4">
         <label className="grid gap-2 text-sm font-bold text-gray-700">
-          Date
+          <T hi="Date" en="Date" />
           <div className="flex gap-2">
             <input
               name="date"
@@ -57,7 +58,7 @@ export default async function HisaabPage({ searchParams }: Props) {
               className="tap-target min-w-0 flex-1 rounded-xl border border-gray-300 px-3 text-base font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-600"
             />
             <button className="tap-target rounded-xl bg-orange-600 px-4 font-black text-white hover:bg-orange-700">
-              Show
+              <T hi="Dekho" en="Show" />
             </button>
           </div>
         </label>
@@ -81,7 +82,7 @@ export default async function HisaabPage({ searchParams }: Props) {
       />
 
       <section className="tactile-card p-4">
-        <h2 className="text-xl font-black text-gray-900">Transactions</h2>
+        <T as="h2" className="text-xl font-black text-gray-900" hi="Transactions" en="Transactions" />
         <p className="mb-4 text-sm font-semibold text-gray-500">{formatDateIst(start)} entries</p>
         <div className="grid gap-2">
           {transactions.length > 0 ? (
