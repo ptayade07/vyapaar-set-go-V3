@@ -101,6 +101,34 @@ export async function addCustomerEntry(customerId: string, formData: FormData) {
   revalidatePath(`/customers/${customerId}`);
 }
 
+export async function deleteCustomerTransaction(customerId: string, transactionId: string) {
+  await prisma.$transaction(async (tx) => {
+    const transactions = await tx.customerTransaction.findMany({
+      where: { customerId },
+      orderBy: { createdAt: "asc" },
+    });
+    const remaining = transactions.filter((transaction) => transaction.id !== transactionId);
+
+    let runningBalance = 0;
+    for (const transaction of remaining) {
+      runningBalance = applyCustomerEntry(runningBalance, transaction.type, transaction.amountPaise);
+      if (transaction.balanceAfterPaise !== runningBalance) {
+        await tx.customerTransaction.update({
+          where: { id: transaction.id },
+          data: { balanceAfterPaise: runningBalance },
+        });
+      }
+    }
+
+    await tx.customerTransaction.delete({ where: { id: transactionId } });
+    await tx.customer.update({ where: { id: customerId }, data: { balancePaise: runningBalance } });
+  });
+
+  revalidatePath("/");
+  revalidatePath("/customers");
+  revalidatePath(`/customers/${customerId}`);
+}
+
 const PHOTO_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/gif", "image/webp", "image/heic"]);
 const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
 

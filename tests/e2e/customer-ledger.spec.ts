@@ -13,23 +13,27 @@ test("create customer, add udhaar, then overpay into advance", async ({ page }) 
 
   await unlockPin(page);
   await page.goto("/customers");
-  const addCustomerForm = page.locator("#add-customer");
-  await addCustomerForm.getByLabel("Name", { exact: true }).fill(customerName);
-  await addCustomerForm.getByLabel("Phone", { exact: true }).fill("9000000001");
-  await addCustomerForm.getByRole("button", { name: "+ New Customer" }).click();
+  await page.getByRole("button", { name: "Naya Grahak" }).click();
+  await page.getByPlaceholder("Naam (required)").fill(customerName);
+  await page.getByPlaceholder("Phone (optional)").fill("9000000001");
+  await page.getByRole("button", { name: "Save karo" }).click();
   await page.waitForLoadState("networkidle");
 
   await expect(page.getByRole("heading", { name: customerName })).toBeVisible({ timeout: 15000 });
 
-  await page.getByTestId("entry-type-UDHAAR").click();
-  await page.getByLabel("Amount").fill("500");
-  await page.getByLabel("Short note").fill("Test udhaar");
-  await page.getByRole("button", { name: "Save Entry" }).click();
-  await expect(page.getByText("Udhaar ₹500").first()).toBeVisible();
+  await page.getByRole("button", { name: "Udhaar Diya" }).click();
+  await page.locator('input[name="amount"]').fill("500");
+  await page.locator('input[name="description"]').fill("Test udhaar");
+  await page.getByRole("button", { name: /Save/ }).click();
+  await expect(page.locator('input[name="amount"]')).toBeHidden();
+  await expect(page.getByText("+₹500").first()).toBeVisible();
 
-  await page.getByTestId("entry-type-PAYMENT").click();
-  await page.getByLabel("Amount").fill("800");
-  await page.getByLabel("Short note").fill("Test overpayment");
-  await page.getByRole("button", { name: "Save Entry" }).click();
-  await expect(page.getByText("Advance ₹300").first()).toBeVisible();
+  await page.getByRole("button", { name: "Payment Liya" }).click();
+  await page.locator('input[name="amount"]').fill("800");
+  await page.locator('input[name="description"]').fill("Test overpayment");
+  await page.getByRole("button", { name: /Save/ }).click();
+  await expect(page.locator('input[name="amount"]')).toBeHidden();
+
+  await expect(page.getByText("Advance").first()).toBeVisible();
+  await expect(page.getByText("₹300").first()).toBeVisible();
 });

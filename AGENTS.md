@@ -13,6 +13,11 @@ This app uses one signed integer balance per customer, stored in paise.
 
 Do not add a second balance column for advances. Overpayment and advance behavior must fall out of signed arithmetic.
 
+Deleting a customer transaction (`deleteCustomerTransaction`) is not a simple row delete: it replays that
+customer's full remaining history in order through `applyCustomerEntry`, rewriting every subsequent row's
+`balanceAfterPaise` and the `Customer.balancePaise` total. Deleting a transaction from the middle of the
+passbook must never leave later rows showing a stale running balance.
+
 Supplier balances are also stored as signed paise, from the shopkeeper's point of view:
 
 - Positive supplier balance means the shopkeeper owes the supplier: display as `Dena hai`.
