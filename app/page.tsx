@@ -1,12 +1,11 @@
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
-import { BalanceBadge } from "@/frontend/components/balance-badge";
-import { Money } from "@/frontend/components/money";
-import { QuickEntry } from "@/frontend/components/quick-entry";
-import { getCustomerTransactionLabel, getSupplierTransactionLabel } from "@/frontend/components/transaction-label";
+import { ChevronRight, Clock, IndianRupee, Plus, TrendingDown, TrendingUp, Truck } from "lucide-react";
 import { computeOldestOpenUdhaarDate, daysBetweenNow } from "@/backend/lib/aging";
 import { formatTimeIst, getIstDayRange, getTodayInputValue } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
+import { Money } from "@/frontend/components/money";
+import { QuickEntry } from "@/frontend/components/quick-entry";
+import { getCustomerTransactionLabel, getSupplierTransactionLabel } from "@/frontend/components/transaction-label";
 
 export const dynamic = "force-dynamic";
 
@@ -80,6 +79,7 @@ export default async function DashboardPage() {
       name: transaction.customer.name,
       amountPaise: transaction.amountPaise,
       type: getCustomerTransactionLabel(transaction.type).label,
+      isUdhaar: transaction.type === "UDHAAR",
       createdAt: transaction.createdAt,
     })),
     ...supplierRecent.map((transaction) => ({
@@ -87,6 +87,7 @@ export default async function DashboardPage() {
       name: transaction.supplier.name,
       amountPaise: transaction.amountPaise,
       type: getSupplierTransactionLabel(transaction.type).label,
+      isUdhaar: transaction.type === "CREDIT",
       createdAt: transaction.createdAt,
     })),
   ]
@@ -105,23 +106,25 @@ export default async function DashboardPage() {
   }));
 
   return (
-    <div className="grid gap-5">
-      <section className="grid gap-2">
-        <p className="text-sm font-black uppercase tracking-wide text-orange-700">Aaj ka dukaan view</p>
-        <h1 className="text-3xl font-black text-gray-900 sm:text-4xl">Dashboard</h1>
-      </section>
+    <div className="mx-auto max-w-6xl space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">Namaste ji! 🙏</h1>
+        <p className="mt-1 text-gray-500">Aaj ka hisaab ek nazar mein</p>
+      </div>
 
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Shop summaries">
-        <SummaryCard title="Total Udhaar" subtitle="Customers owe me" amountPaise={totalUdhaar} tone="red" />
-        <SummaryCard title="Total Advance" subtitle="Customers paid ahead" amountPaise={totalAdvance} tone="green" />
-        <SummaryCard title="Aaj ka Hisaab" subtitle="Sales + payments received" amountPaise={todayTotal} tone="saffron" />
-        <SummaryCard title="Supplier Dena" subtitle="I owe suppliers" amountPaise={supplierDena} tone="stone" />
-      </section>
+      <QuickEntry />
 
       {agingCounts.some((bucket) => bucket.count > 0) ? (
         <section className="tactile-card p-6" data-testid="card-kal-kya-bacha">
-          <h2 className="text-xl font-black text-gray-900">Kal kya bacha?</h2>
-          <p className="mb-3 text-sm font-semibold text-gray-500">Purana udhaar jo abhi tak clear nahi hua</p>
+          <div className="mb-4 flex items-center gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100">
+              <Clock className="h-5 w-5 text-amber-700" />
+            </span>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Kal kya bacha?</h2>
+              <p className="text-xs text-gray-500">Purane udhaar wale grahak</p>
+            </div>
+          </div>
           <div className="grid grid-cols-3 gap-3">
             {agingCounts.map((bucket) => (
               <Link
@@ -143,19 +146,62 @@ export default async function DashboardPage() {
         </section>
       ) : null}
 
-      <section className="grid gap-3 sm:grid-cols-3" aria-label="Quick actions">
-        <QuickAction href="/customers" label="+ New Entry" subtitle="Choose customer khata" />
-        <QuickAction href="/customers#add-customer" label="+ New Customer" subtitle="Naya khata kholo" />
-        <QuickAction href="/suppliers#add-supplier" label="+ New Supplier" subtitle="Supplier jodo" />
-      </section>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <SummaryCard
+          title="Total Udhaar"
+          subtitle="Money customers owe"
+          amountPaise={totalUdhaar}
+          color="bg-red-500"
+          Icon={TrendingUp}
+        />
+        <SummaryCard
+          title="Total Advance"
+          subtitle="Customer paid ahead"
+          amountPaise={totalAdvance}
+          color="bg-green-600"
+          Icon={TrendingDown}
+        />
+        <SummaryCard
+          title="Aaj ka Hisaab"
+          subtitle="Today's cash in"
+          amountPaise={todayTotal}
+          color="bg-orange-600"
+          Icon={IndianRupee}
+        />
+        <SummaryCard
+          title="Supplier Dena"
+          subtitle="You owe suppliers"
+          amountPaise={supplierDena}
+          color="bg-amber-700"
+          Icon={Truck}
+        />
+      </div>
 
-      <QuickEntry />
+      <div className="flex flex-wrap gap-3">
+        <Link
+          href="/customers"
+          className="tap-target inline-flex items-center gap-2 rounded-2xl bg-orange-600 px-6 font-semibold text-white shadow-md transition hover:bg-orange-700 active:scale-95"
+        >
+          <Plus className="h-5 w-5" /> Naya Grahak
+        </Link>
+        <Link
+          href="/suppliers"
+          className="tap-target inline-flex items-center gap-2 rounded-2xl border-2 border-orange-200 bg-white px-6 font-semibold text-orange-700 transition hover:border-orange-400 active:scale-95"
+        >
+          <Plus className="h-5 w-5" /> Naya Supplier
+        </Link>
+        <Link
+          href="/hisaab"
+          className="tap-target inline-flex items-center gap-2 rounded-2xl border-2 border-gray-200 bg-white px-6 font-semibold text-gray-800 transition hover:border-gray-400 active:scale-95"
+        >
+          Aaj ka Hisaab
+        </Link>
+      </div>
 
       {todayReminders.length > 0 ? (
         <section className="tactile-card p-6" data-testid="today-reminders-block">
-          <h2 className="text-xl font-black text-gray-900">Aaj ke Reminders</h2>
-          <p className="mb-3 text-sm font-semibold text-gray-500">Notes jo aaj tak due hain</p>
-          <div className="grid gap-2">
+          <h2 className="mb-4 text-xl font-bold text-gray-900">Aaj ke Reminders</h2>
+          <div className="space-y-2">
             {todayReminders.map((note) => (
               <div key={note.id} className="rounded-xl bg-orange-50 p-3">
                 <p className="font-semibold text-gray-900">{note.title}</p>
@@ -166,32 +212,26 @@ export default async function DashboardPage() {
         </section>
       ) : null}
 
-      <section className="tactile-card p-4">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-black text-gray-900">Recent Transactions</h2>
-            <p className="text-sm font-semibold text-gray-500">Last 10 entries, newest first</p>
-          </div>
-          <BalanceBadge balancePaise={totalUdhaar - totalAdvance} />
-        </div>
-        <div className="grid gap-2">
+      <section className="tactile-card p-6" data-testid="recent-transactions-block">
+        <h2 className="mb-4 text-xl font-bold text-gray-900">Recent Transactions</h2>
+        <div className="divide-y divide-gray-100">
           {recent.length > 0 ? (
             recent.map((transaction) => (
-              <div
-                key={transaction.id}
-                className="grid grid-cols-[1fr_auto] gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3"
-              >
+              <div key={transaction.id} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
-                  <p className="truncate text-base font-black text-gray-900">{transaction.name}</p>
-                  <p className="text-sm font-semibold text-gray-500">
-                    {transaction.type} · {formatTimeIst(transaction.createdAt)}
+                  <p className="truncate font-semibold text-gray-900">{transaction.name}</p>
+                  <p className="text-xs text-gray-500">
+                    {formatTimeIst(transaction.createdAt)} · {transaction.type}
                   </p>
                 </div>
-                <Money amountPaise={transaction.amountPaise} className="text-lg font-black text-gray-900" />
+                <Money
+                  amountPaise={transaction.amountPaise}
+                  className={`text-lg font-bold ${transaction.isUdhaar ? "text-red-600" : "text-green-700"}`}
+                />
               </div>
             ))
           ) : (
-            <p className="rounded-xl bg-gray-100 p-4 text-sm font-bold text-gray-600">No transactions yet.</p>
+            <p className="py-6 text-center text-gray-400">Koi transaction nahi hai abhi.</p>
           )}
         </div>
       </section>
@@ -203,37 +243,25 @@ function SummaryCard({
   title,
   subtitle,
   amountPaise,
-  tone,
+  color,
+  Icon,
 }: {
   title: string;
   subtitle: string;
   amountPaise: number;
-  tone: "red" | "green" | "saffron" | "stone";
+  color: string;
+  Icon: typeof TrendingUp;
 }) {
-  const colors = {
-    red: "border-red-100 bg-red-50 text-red-700",
-    green: "border-green-100 bg-green-50 text-green-700",
-    saffron: "border-orange-100 bg-orange-50 text-gray-900",
-    stone: "border-gray-200 bg-gray-50 text-gray-900",
-  };
-
   return (
-    <div className={`tactile-card border p-6 ${colors[tone]}`}>
-      <p className="text-sm font-black">{title}</p>
-      <p className="text-xs font-semibold text-gray-500">{subtitle}</p>
-      <Money amountPaise={amountPaise} className="mt-4 block text-3xl font-bold" />
+    <div className="tactile-card p-6">
+      <div className="mb-3 flex items-start justify-between">
+        <span className={`flex h-12 w-12 items-center justify-center rounded-xl ${color}`}>
+          <Icon className="h-6 w-6 text-white" />
+        </span>
+      </div>
+      <p className="text-sm font-semibold text-gray-700">{title}</p>
+      <p className="mb-2 text-xs text-gray-400">{subtitle}</p>
+      <Money amountPaise={amountPaise} className="block text-3xl font-bold text-gray-900 sm:text-4xl" />
     </div>
-  );
-}
-
-function QuickAction({ href, label, subtitle }: { href: string; label: string; subtitle: string }) {
-  return (
-    <Link
-      href={href}
-      className="tap-target rounded-2xl border border-orange-600 bg-orange-600 p-4 text-white shadow-sm transition hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-700 active:scale-95"
-    >
-      <span className="block text-xl font-black">{label}</span>
-      <span className="block text-sm font-semibold text-orange-50">{subtitle}</span>
-    </Link>
   );
 }

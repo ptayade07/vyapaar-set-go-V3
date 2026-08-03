@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { AlertTriangle, Phone } from "lucide-react";
 import { createSupplier } from "@/backend/actions/actions";
-import { BalanceBadge } from "@/frontend/components/balance-badge";
 import { prisma } from "@/backend/lib/prisma";
+import { AddPersonPanel } from "@/frontend/components/add-person-panel";
+import { BalanceText } from "@/frontend/components/balance-text";
 
 export const dynamic = "force-dynamic";
 
@@ -19,73 +21,44 @@ export default async function SuppliersPage() {
   });
 
   return (
-    <div className="grid gap-5">
-      <section>
-        <p className="text-sm font-black uppercase tracking-wide text-orange-700">Supplier hisaab</p>
-        <h1 className="text-3xl font-black text-gray-900">Suppliers</h1>
-      </section>
+    <div className="mx-auto max-w-4xl space-y-6">
+      <AddPersonPanel
+        title="Suppliers"
+        subtitle="Jinke maal ka paisa dena hai"
+        triggerLabel="Naya Supplier"
+        action={createSupplier}
+      />
 
-      <section className="grid gap-3">
+      <div className="space-y-3">
+        {suppliers.length === 0 ? <div className="py-10 text-center text-gray-400">Koi supplier nahi hai.</div> : null}
         {suppliers.map((supplier) => {
           const overdue = supplier.balancePaise > 0 && supplier.transactions.length > 0;
           return (
             <Link
               key={supplier.id}
               href={`/suppliers/${supplier.id}`}
-              className="tactile-card grid gap-3 p-4 sm:grid-cols-[1fr_auto]"
+              className="tactile-card flex items-center justify-between gap-4 p-5 hover:border-orange-300"
             >
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="truncate text-xl font-black text-gray-900">{supplier.name}</p>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2 truncate text-lg font-bold text-gray-900">
+                  {supplier.name}
                   {overdue ? (
-                    <span className="rounded-full border border-red-100 bg-red-50 px-2 py-0.5 text-xs font-black text-red-700">
-                      Overdue
+                    <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+                      <AlertTriangle className="h-3 w-3" /> Overdue
                     </span>
                   ) : null}
                 </div>
-                <p className="text-sm font-semibold text-gray-500">{supplier.phone || "No phone"}</p>
+                {supplier.phone ? (
+                  <div className="mt-0.5 flex items-center gap-1 text-sm text-gray-500">
+                    <Phone className="h-3.5 w-3.5" /> {supplier.phone}
+                  </div>
+                ) : null}
               </div>
-              <div className="self-center">
-                <BalanceBadge balancePaise={supplier.balancePaise} kind="supplier" />
-              </div>
+              <BalanceText balancePaise={supplier.balancePaise} kind="supplier" />
             </Link>
           );
         })}
-      </section>
-
-      <section id="add-supplier" className="tactile-card p-4">
-        <h2 className="text-xl font-black text-gray-900">Add Supplier</h2>
-        <p className="mb-4 text-sm font-semibold text-gray-500">Naya supplier jodo</p>
-        <form action={createSupplier} className="grid gap-3">
-          <label className="grid gap-2 text-sm font-bold text-gray-700">
-            Name
-            <input
-              name="name"
-              className="tap-target rounded-xl border border-gray-300 px-3 text-base focus:outline-none focus:ring-2 focus:ring-orange-600"
-              required
-            />
-          </label>
-          <label className="grid gap-2 text-sm font-bold text-gray-700">
-            Phone
-            <input
-              name="phone"
-              inputMode="tel"
-              className="tap-target rounded-xl border border-gray-300 px-3 text-base focus:outline-none focus:ring-2 focus:ring-orange-600"
-            />
-          </label>
-          <label className="grid gap-2 text-sm font-bold text-gray-700">
-            Note
-            <textarea
-              name="note"
-              rows={2}
-              className="rounded-xl border border-gray-300 px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-orange-600"
-            />
-          </label>
-          <button className="tap-target rounded-xl bg-orange-600 px-5 py-3 text-lg font-black text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-700">
-            + New Supplier
-          </button>
-        </form>
-      </section>
+      </div>
     </div>
   );
 }
