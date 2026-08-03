@@ -1,5 +1,5 @@
 import { getCustomerBalanceDisplay, getSupplierBalanceDisplay } from "@/lib/balance";
-import { formatMoneyPaise } from "@/lib/format";
+import { Money } from "@/components/money";
 
 type Props = {
   balancePaise: number;
@@ -12,19 +12,19 @@ export function BalanceBadge({ balancePaise, kind = "customer", large = false }:
     kind === "customer" ? getCustomerBalanceDisplay(balancePaise) : getSupplierBalanceDisplay(balancePaise);
   const color =
     display.tone === "udhaar"
-      ? "border-red-200 bg-red-50 text-[#b42318]"
+      ? "border-red-100 bg-red-50 text-red-700"
       : display.tone === "advance"
-        ? "border-green-200 bg-green-50 text-[#16803c]"
-        : "border-stone-200 bg-stone-100 text-stone-600";
+        ? "border-green-100 bg-green-50 text-green-700"
+        : "border-transparent bg-gray-100 text-gray-600";
 
   return (
     <span
-      className={`inline-flex items-center rounded-md border font-black ${color} ${
-        large ? "px-4 py-3 text-2xl" : "px-3 py-2 text-sm"
+      className={`inline-flex items-center gap-1.5 rounded-full border font-semibold ${color} ${
+        large ? "px-4 py-2 text-base" : "px-3 py-1 text-sm"
       }`}
     >
       {display.label}
-      {display.amountPaise > 0 ? ` ${formatMoneyPaise(display.amountPaise)}` : ""}
+      {display.amountPaise > 0 ? <Money amountPaise={display.amountPaise} /> : null}
     </span>
   );
 }
