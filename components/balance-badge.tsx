@@ -24,7 +24,7 @@ export function BalanceBadge({ balancePaise, kind = "customer", large = false }:
       }`}
     >
       {display.label}
-      {display.amountPaise > 0 ? <Money amountPaise={display.amountPaise} /> : null}
+      {display.amountPaise > 0 ? <>{" "}<Money amountPaise={display.amountPaise} /></> : null}
     </span>
   );
 }
