@@ -1,7 +1,7 @@
-import { createInventoryItem } from "@/app/inventory-actions";
+import { createInventoryItem } from "@/backend/actions/inventory-actions";
 import { InventoryItemCard } from "@/components/inventory-item-card";
-import { isLowStock } from "@/lib/inventory";
-import { prisma } from "@/lib/prisma";
+import { isLowStock } from "@/backend/lib/inventory";
+import { prisma } from "@/backend/lib/prisma";
 
 export const dynamic = "force-dynamic";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { formatMoneyPaise } from "@/lib/format";
+import { formatMoneyPaise } from "@/backend/lib/format";
 
 type Props = {
   name: string;

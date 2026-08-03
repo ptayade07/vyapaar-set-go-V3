@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseQuickEntryDeterministic } from "../lib/quick-entry";
+import { parseQuickEntryDeterministic } from "../backend/lib/quick-entry";
 
 const knownCustomers = [
   { id: "cust_ramesh", name: "Ramesh Kirana" },

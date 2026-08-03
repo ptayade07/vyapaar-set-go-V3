@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { createCustomer } from "@/app/actions";
+import { createCustomer } from "@/backend/actions/actions";
 import { BalanceBadge } from "@/components/balance-badge";
-import { computeOldestOpenUdhaarDate, daysBetweenNow } from "@/lib/aging";
-import { prisma } from "@/lib/prisma";
+import { computeOldestOpenUdhaarDate, daysBetweenNow } from "@/backend/lib/aging";
+import { prisma } from "@/backend/lib/prisma";
 
 export const dynamic = "force-dynamic";
 

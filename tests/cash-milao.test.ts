@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeExpectedCashPaise, getCashMilaoVerdict } from "../lib/cash-milao";
+import { computeExpectedCashPaise, getCashMilaoVerdict } from "../backend/lib/cash-milao";
 
 describe("computeExpectedCashPaise", () => {
   it("adds opening cash and today's cash-in, then subtracts supplier payments", () => {

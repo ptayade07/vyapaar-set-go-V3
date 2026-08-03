@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { parseQuickEntryWithLlm } from "../lib/quick-entry-llm";
+import { parseQuickEntryWithLlm } from "../backend/lib/quick-entry-llm";
 
 const customers = [{ id: "cust_ramesh", name: "Ramesh Kirana" }];
 

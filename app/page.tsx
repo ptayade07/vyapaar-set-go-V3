@@ -4,9 +4,9 @@ import { BalanceBadge } from "@/components/balance-badge";
 import { Money } from "@/components/money";
 import { QuickEntry } from "@/components/quick-entry";
 import { getCustomerTransactionLabel, getSupplierTransactionLabel } from "@/components/transaction-label";
-import { computeOldestOpenUdhaarDate, daysBetweenNow } from "@/lib/aging";
-import { formatTimeIst, getIstDayRange, getTodayInputValue } from "@/lib/format";
-import { prisma } from "@/lib/prisma";
+import { computeOldestOpenUdhaarDate, daysBetweenNow } from "@/backend/lib/aging";
+import { formatTimeIst, getIstDayRange, getTodayInputValue } from "@/backend/lib/format";
+import { prisma } from "@/backend/lib/prisma";
 
 export const dynamic = "force-dynamic";
 

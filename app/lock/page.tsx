@@ -3,7 +3,7 @@
 import { Delete } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { verifyPinAction } from "@/app/actions";
+import { verifyPinAction } from "@/backend/actions/actions";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 

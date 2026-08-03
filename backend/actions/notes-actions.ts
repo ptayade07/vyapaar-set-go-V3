@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { optionalText } from "@/lib/format";
-import { prisma } from "@/lib/prisma";
+import { optionalText } from "@/backend/lib/format";
+import { prisma } from "@/backend/lib/prisma";
 
 export async function createNote(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();

@@ -1,10 +1,10 @@
 import { renderToBuffer } from "@react-pdf/renderer";
 import { NextRequest, NextResponse } from "next/server";
 import { notFound } from "next/navigation";
-import { getCustomerBalanceDisplay } from "@/lib/balance";
-import { formatDateTimeIst, formatMoneyPaise } from "@/lib/format";
-import { prisma } from "@/lib/prisma";
-import { CustomerStatementDocument } from "@/lib/statement-pdf";
+import { getCustomerBalanceDisplay } from "@/backend/lib/balance";
+import { formatDateTimeIst, formatMoneyPaise } from "@/backend/lib/format";
+import { prisma } from "@/backend/lib/prisma";
+import { CustomerStatementDocument } from "@/backend/lib/statement-pdf";
 
 export const dynamic = "force-dynamic";
 

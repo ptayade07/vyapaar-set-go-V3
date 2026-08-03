@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { createSupplier } from "@/app/actions";
+import { createSupplier } from "@/backend/actions/actions";
 import { BalanceBadge } from "@/components/balance-badge";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/backend/lib/prisma";
 
 export const dynamic = "force-dynamic";
 

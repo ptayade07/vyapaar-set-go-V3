@@ -2,8 +2,8 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { deleteNote, toggleNote } from "@/app/notes-actions";
-import { formatDateIst } from "@/lib/format";
+import { deleteNote, toggleNote } from "@/backend/actions/notes-actions";
+import { formatDateIst } from "@/backend/lib/format";
 
 type Props = {
   note: {

@@ -1,4 +1,4 @@
-import { getCustomerBalanceDisplay, getSupplierBalanceDisplay } from "@/lib/balance";
+import { getCustomerBalanceDisplay, getSupplierBalanceDisplay } from "@/backend/lib/balance";
 import { Money } from "@/components/money";
 
 type Props = {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildHisaabSummaryPrompt, buildTemplatedSummary, type HisaabSummaryData } from "../lib/hisaab-summary";
+import { buildHisaabSummaryPrompt, buildTemplatedSummary, type HisaabSummaryData } from "../backend/lib/hisaab-summary";
 
 function baseData(overrides: Partial<HisaabSummaryData> = {}): HisaabSummaryData {
   return {

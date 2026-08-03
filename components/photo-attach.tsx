@@ -2,7 +2,7 @@
 
 import { Camera } from "lucide-react";
 import { useRef, useState } from "react";
-import { uploadTransactionPhoto } from "@/app/actions";
+import { uploadTransactionPhoto } from "@/backend/actions/actions";
 
 export function PhotoAttach() {
   const inputRef = useRef<HTMLInputElement>(null);

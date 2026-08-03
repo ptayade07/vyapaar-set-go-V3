@@ -2,7 +2,7 @@ import { Lock } from "lucide-react";
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Work_Sans } from "next/font/google";
 import Link from "next/link";
-import { lockAction } from "@/app/actions";
+import { lockAction } from "@/backend/actions/actions";
 import "./globals.css";
 
 const workSans = Work_Sans({

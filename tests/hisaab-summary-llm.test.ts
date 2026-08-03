@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { generateHisaabSummaryWithLlm } from "../lib/hisaab-summary-llm";
-import type { HisaabSummaryData } from "../lib/hisaab-summary";
+import { generateHisaabSummaryWithLlm } from "../backend/lib/hisaab-summary-llm";
+import type { HisaabSummaryData } from "../backend/lib/hisaab-summary";
 
 const data: HisaabSummaryData = {
   dateLabel: "02/08/2026",

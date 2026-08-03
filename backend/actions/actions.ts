@@ -5,12 +5,12 @@ import { CustomerTransactionType, SupplierTransactionType } from "@prisma/client
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { applyCustomerEntry, applySupplierEntry } from "@/lib/balance";
-import { optionalText, parseAmountToPaise } from "@/lib/format";
-import { verifyPin } from "@/lib/pin";
-import { prisma } from "@/lib/prisma";
-import { parseQuickEntryWithLlm } from "@/lib/quick-entry-llm";
-import { MAX_QUICK_ENTRY_AMOUNT_PAISE, parseQuickEntryDeterministic, type QuickEntryType } from "@/lib/quick-entry";
+import { applyCustomerEntry, applySupplierEntry } from "@/backend/lib/balance";
+import { optionalText, parseAmountToPaise } from "@/backend/lib/format";
+import { verifyPin } from "@/backend/lib/pin";
+import { prisma } from "@/backend/lib/prisma";
+import { parseQuickEntryWithLlm } from "@/backend/lib/quick-entry-llm";
+import { MAX_QUICK_ENTRY_AMOUNT_PAISE, parseQuickEntryDeterministic, type QuickEntryType } from "@/backend/lib/quick-entry";
 
 const UNLOCK_COOKIE = "vsg_unlocked";
 

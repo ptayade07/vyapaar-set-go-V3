@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isLowStock, LOW_STOCK_THRESHOLD } from "../lib/inventory";
+import { isLowStock, LOW_STOCK_THRESHOLD } from "../backend/lib/inventory";
 
 describe("inventory low-stock rule", () => {
   it("is not low stock comfortably above the threshold", () => {

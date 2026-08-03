@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { confirmQuickEntry, parseQuickEntry, type QuickEntryParsePayload } from "@/app/actions";
-import { formatMoneyPaise } from "@/lib/format";
+import { confirmQuickEntry, parseQuickEntry, type QuickEntryParsePayload } from "@/backend/actions/actions";
+import { formatMoneyPaise } from "@/backend/lib/format";
 
 const TYPE_LABELS: Record<string, { label: string; subtitle: string }> = {
   UDHAAR: { label: "Udhaar Diya", subtitle: "goods on credit" },

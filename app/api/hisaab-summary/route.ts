@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { buildTemplatedSummary, type HisaabSummaryData } from "@/lib/hisaab-summary";
-import { generateHisaabSummaryWithLlm } from "@/lib/hisaab-summary-llm";
-import { computeOldestOpenUdhaarDate, daysBetweenNow } from "@/lib/aging";
-import { formatDateIst, getIstDayRange, getTodayInputValue } from "@/lib/format";
-import { isLowStock } from "@/lib/inventory";
-import { prisma } from "@/lib/prisma";
+import { buildTemplatedSummary, type HisaabSummaryData } from "@/backend/lib/hisaab-summary";
+import { generateHisaabSummaryWithLlm } from "@/backend/lib/hisaab-summary-llm";
+import { computeOldestOpenUdhaarDate, daysBetweenNow } from "@/backend/lib/aging";
+import { formatDateIst, getIstDayRange, getTodayInputValue } from "@/backend/lib/format";
+import { isLowStock } from "@/backend/lib/inventory";
+import { prisma } from "@/backend/lib/prisma";
 
 export const dynamic = "force-dynamic";
 

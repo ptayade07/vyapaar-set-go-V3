@@ -3,9 +3,9 @@
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { setOpeningCash } from "@/app/actions";
-import { computeExpectedCashPaise, getCashMilaoVerdict } from "@/lib/cash-milao";
-import { formatMoneyPaise } from "@/lib/format";
+import { setOpeningCash } from "@/backend/actions/actions";
+import { computeExpectedCashPaise, getCashMilaoVerdict } from "@/backend/lib/cash-milao";
+import { formatMoneyPaise } from "@/backend/lib/format";
 
 type Props = {
   date: string;

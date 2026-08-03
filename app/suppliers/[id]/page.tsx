@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { addSupplierEntry } from "@/app/actions";
+import { addSupplierEntry } from "@/backend/actions/actions";
 import { BalanceBadge } from "@/components/balance-badge";
 import { EntryForm } from "@/components/entry-form";
 import { Money } from "@/components/money";
 import { getSupplierTransactionLabel } from "@/components/transaction-label";
-import { formatDateIst } from "@/lib/format";
-import { prisma } from "@/lib/prisma";
+import { formatDateIst } from "@/backend/lib/format";
+import { prisma } from "@/backend/lib/prisma";
 
 export const dynamic = "force-dynamic";
 

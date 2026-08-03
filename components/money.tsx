@@ -1,4 +1,4 @@
-import { formatMoneyPaise } from "@/lib/format";
+import { formatMoneyPaise } from "@/backend/lib/format";
 
 type Props = {
   amountPaise: number;

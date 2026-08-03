@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/backend/lib/prisma";
 
 const PIN_KEY = "pin";
 const DEFAULT_PIN = "1234";

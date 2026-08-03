@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { parseAmountToPaise } from "@/lib/format";
-import { prisma } from "@/lib/prisma";
+import { parseAmountToPaise } from "@/backend/lib/format";
+import { prisma } from "@/backend/lib/prisma";
 
 function parseQuantity(value: FormDataEntryValue | null) {
   const text = String(value ?? "").trim();
