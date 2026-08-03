@@ -1,6 +1,8 @@
+import { CashMilao } from "@/components/cash-milao";
 import { HisaabAiSummary } from "@/components/hisaab-ai-summary";
+import { Money } from "@/components/money";
 import { getCustomerTransactionLabel } from "@/components/transaction-label";
-import { formatDateIst, formatMoneyPaise, getIstDayRange, getTodayInputValue } from "@/lib/format";
+import { formatDateIst, getIstDayRange, getTodayInputValue } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -13,11 +15,18 @@ export default async function HisaabPage({ searchParams }: Props) {
   const params = await searchParams;
   const selectedDate = params?.date || getTodayInputValue();
   const { start, end } = getIstDayRange(selectedDate);
-  const transactions = await prisma.customerTransaction.findMany({
-    where: { createdAt: { gte: start, lt: end } },
-    include: { customer: { select: { name: true } } },
-    orderBy: { createdAt: "desc" },
-  });
+  const [transactions, supplierPaymentsToday, openingCashRow] = await Promise.all([
+    prisma.customerTransaction.findMany({
+      where: { createdAt: { gte: start, lt: end } },
+      include: { customer: { select: { name: true } } },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.supplierTransaction.findMany({
+      where: { createdAt: { gte: start, lt: end }, type: "PAYMENT" },
+      select: { amountPaise: true },
+    }),
+    prisma.openingCash.findUnique({ where: { date: selectedDate } }),
+  ]);
   const udhaar = transactions
     .filter((transaction) => transaction.type === "UDHAAR")
     .reduce((sum, transaction) => sum + transaction.amountPaise, 0);
@@ -28,41 +37,52 @@ export default async function HisaabPage({ searchParams }: Props) {
     .filter((transaction) => transaction.type === "ADVANCE")
     .reduce((sum, transaction) => sum + transaction.amountPaise, 0);
   const net = payments + advances - udhaar;
+  const supplierPaymentsTodayPaise = supplierPaymentsToday.reduce((sum, t) => sum + t.amountPaise, 0);
 
   return (
     <div className="grid gap-5">
       <section>
-        <p className="text-sm font-black uppercase tracking-wide text-[#16803c]">End-of-day tally</p>
-        <h1 className="text-3xl font-black text-[#1f271f]">Aaj ka Hisaab</h1>
+        <p className="text-sm font-black uppercase tracking-wide text-orange-700">End-of-day tally</p>
+        <h1 className="text-3xl font-black text-gray-900">Aaj ka Hisaab</h1>
       </section>
 
-      <form action="/hisaab" className="rounded-lg border border-amber-200 bg-white p-4 shadow-sm">
-        <label className="grid gap-2 text-sm font-bold text-[#384238]">
+      <form action="/hisaab" className="tactile-card p-4">
+        <label className="grid gap-2 text-sm font-bold text-gray-700">
           Date
           <div className="flex gap-2">
             <input
               name="date"
               type="date"
               defaultValue={selectedDate}
-              className="tap-target min-w-0 flex-1 rounded-md border border-stone-300 px-3 text-base font-bold focus:outline-none focus:ring-2 focus:ring-[#16803c]"
+              className="tap-target min-w-0 flex-1 rounded-xl border border-gray-300 px-3 text-base font-bold focus:outline-none focus:ring-2 focus:ring-orange-600"
             />
-            <button className="tap-target rounded-md bg-[#f59e0b] px-4 font-black text-[#1f271f]">Show</button>
+            <button className="tap-target rounded-xl bg-orange-600 px-4 font-black text-white hover:bg-orange-700">
+              Show
+            </button>
           </div>
         </label>
       </form>
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <ReportCard title="Udhaar Given" subtitle="Credit sales" amount={udhaar} />
-        <ReportCard title="Payments Received" subtitle="Cash collected" amount={payments} />
-        <ReportCard title="Advance Collected" subtitle="Paid ahead" amount={advances} />
-        <ReportCard title="Net for Day" subtitle="Cash minus udhaar" amount={net} />
+        <ReportCard title="Udhaar Given" subtitle="Credit sales" amountPaise={udhaar} />
+        <ReportCard title="Payments Received" subtitle="Cash collected" amountPaise={payments} />
+        <ReportCard title="Advance Collected" subtitle="Paid ahead" amountPaise={advances} />
+        <ReportCard title="Net for Day" subtitle="Cash minus udhaar" amountPaise={net} />
       </section>
 
       <HisaabAiSummary date={selectedDate} />
 
-      <section className="rounded-lg border border-amber-200 bg-white p-4 shadow-sm">
-        <h2 className="text-xl font-black text-[#1f271f]">Transactions</h2>
-        <p className="mb-4 text-sm font-semibold text-[#6f6a60]">{formatDateIst(start)} entries</p>
+      <CashMilao
+        date={selectedDate}
+        openingPaise={openingCashRow?.amountPaise ?? 0}
+        paymentsTotalPaise={payments}
+        advanceTotalPaise={advances}
+        supplierPaymentsTodayPaise={supplierPaymentsTodayPaise}
+      />
+
+      <section className="tactile-card p-4">
+        <h2 className="text-xl font-black text-gray-900">Transactions</h2>
+        <p className="mb-4 text-sm font-semibold text-gray-500">{formatDateIst(start)} entries</p>
         <div className="grid gap-2">
           {transactions.length > 0 ? (
             transactions.map((transaction) => {
@@ -70,20 +90,20 @@ export default async function HisaabPage({ searchParams }: Props) {
               return (
                 <div
                   key={transaction.id}
-                  className="grid grid-cols-[1fr_auto] gap-3 rounded-md border border-stone-200 bg-[#fffdf7] p-3"
+                  className="grid grid-cols-[1fr_auto] gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-base font-black text-[#1f271f]">{transaction.customer.name}</p>
-                    <p className="text-sm font-semibold text-[#6f6a60]">
+                    <p className="truncate text-base font-black text-gray-900">{transaction.customer.name}</p>
+                    <p className="text-sm font-semibold text-gray-500">
                       {label.label} · {transaction.description || label.subtitle}
                     </p>
                   </div>
-                  <p className="text-lg font-black text-[#1f271f]">{formatMoneyPaise(transaction.amountPaise)}</p>
+                  <Money amountPaise={transaction.amountPaise} className="text-lg font-black text-gray-900" />
                 </div>
               );
             })
           ) : (
-            <p className="rounded-md bg-stone-100 p-4 text-sm font-bold text-stone-600">No entries for this date.</p>
+            <p className="rounded-xl bg-gray-100 p-4 text-sm font-bold text-gray-600">No entries for this date.</p>
           )}
         </div>
       </section>
@@ -91,14 +111,17 @@ export default async function HisaabPage({ searchParams }: Props) {
   );
 }
 
-function ReportCard({ title, subtitle, amount }: { title: string; subtitle: string; amount: number }) {
-  const color = amount < 0 ? "text-[#b42318]" : "text-[#1f271f]";
+function ReportCard({ title, subtitle, amountPaise }: { title: string; subtitle: string; amountPaise: number }) {
+  const color = amountPaise < 0 ? "text-red-700" : "text-gray-900";
 
   return (
-    <div className="rounded-lg border border-amber-200 bg-white p-4 shadow-sm">
-      <p className="text-sm font-black text-[#384238]">{title}</p>
-      <p className="text-xs font-semibold text-[#6f6a60]">{subtitle}</p>
-      <p className={`mt-4 text-3xl font-black ${color}`}>{amount < 0 ? "-" : ""}{formatMoneyPaise(amount)}</p>
+    <div className="tactile-card p-6">
+      <p className="text-sm font-black text-gray-700">{title}</p>
+      <p className="text-xs font-semibold text-gray-500">{subtitle}</p>
+      <p className={`mt-4 text-3xl font-black ${color}`}>
+        {amountPaise < 0 ? "-" : ""}
+        <Money amountPaise={Math.abs(amountPaise)} />
+      </p>
     </div>
   );
 }
