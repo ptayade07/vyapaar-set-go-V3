@@ -1,13 +1,47 @@
 "use server";
 
+import { put } from "@vercel/blob";
 import { CustomerTransactionType, SupplierTransactionType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { applyCustomerEntry, applySupplierEntry } from "@/lib/balance";
 import { optionalText, parseAmountToPaise } from "@/lib/format";
+import { verifyPin } from "@/lib/pin";
 import { prisma } from "@/lib/prisma";
 import { parseQuickEntryWithLlm } from "@/lib/quick-entry-llm";
 import { MAX_QUICK_ENTRY_AMOUNT_PAISE, parseQuickEntryDeterministic, type QuickEntryType } from "@/lib/quick-entry";
+
+const UNLOCK_COOKIE = "vsg_unlocked";
+
+export async function verifyPinAction(pin: string): Promise<boolean> {
+  const correct = await verifyPin(pin);
+  if (correct) {
+    const cookieStore = await cookies();
+    cookieStore.set(UNLOCK_COOKIE, "1", { httpOnly: true, sameSite: "lax", path: "/" });
+  }
+  return correct;
+}
+
+export async function lockAction() {
+  const cookieStore = await cookies();
+  cookieStore.delete(UNLOCK_COOKIE);
+  redirect("/lock");
+}
+
+export async function setOpeningCash(date: string, amountPaise: number) {
+  if (!Number.isInteger(amountPaise) || amountPaise < 0) {
+    throw new Error("Opening cash must be zero or a positive whole paise value.");
+  }
+
+  await prisma.openingCash.upsert({
+    where: { date },
+    create: { date, amountPaise },
+    update: { amountPaise },
+  });
+
+  revalidatePath("/hisaab");
+}
 
 export async function createCustomer(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
@@ -33,6 +67,7 @@ export async function addCustomerEntry(customerId: string, formData: FormData) {
   const type = String(formData.get("type")) as CustomerTransactionType;
   const amountPaise = parseAmountToPaise(formData.get("amount"));
   const description = optionalText(formData.get("description"));
+  const photoUrl = optionalText(formData.get("photoUrl"));
 
   if (!["UDHAAR", "PAYMENT", "ADVANCE"].includes(type)) {
     throw new Error("Invalid customer transaction type.");
@@ -55,6 +90,7 @@ export async function addCustomerEntry(customerId: string, formData: FormData) {
         type,
         amountPaise,
         description,
+        photoUrl,
         balanceAfterPaise,
       },
     });
@@ -63,6 +99,36 @@ export async function addCustomerEntry(customerId: string, formData: FormData) {
   revalidatePath("/");
   revalidatePath("/customers");
   revalidatePath(`/customers/${customerId}`);
+}
+
+const PHOTO_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/gif", "image/webp", "image/heic"]);
+const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
+
+export type UploadPhotoResult = { ok: true; url: string } | { ok: false; reason: string };
+
+export async function uploadTransactionPhoto(formData: FormData): Promise<UploadPhotoResult> {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    return { ok: false, reason: "not_configured" };
+  }
+
+  const file = formData.get("file");
+  if (!(file instanceof File)) {
+    return { ok: false, reason: "no_file" };
+  }
+  if (!PHOTO_MIME_TYPES.has(file.type)) {
+    return { ok: false, reason: "unsupported_type" };
+  }
+  if (file.size > MAX_PHOTO_BYTES) {
+    return { ok: false, reason: "too_large" };
+  }
+
+  const extension = file.type.split("/")[1] ?? "bin";
+  const blob = await put(`vyapaar-set-go/receipts/${crypto.randomUUID()}.${extension}`, file, {
+    access: "public",
+    contentType: file.type,
+  });
+
+  return { ok: true, url: blob.url };
 }
 
 export async function createSupplier(formData: FormData) {
