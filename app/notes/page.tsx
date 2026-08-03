@@ -1,5 +1,5 @@
 import { createNote } from "@/backend/actions/notes-actions";
-import { NoteRow } from "@/components/note-row";
+import { NoteRow } from "@/frontend/components/note-row";
 import { prisma } from "@/backend/lib/prisma";
 
 export const dynamic = "force-dynamic";

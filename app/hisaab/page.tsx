@@ -1,7 +1,7 @@
-import { CashMilao } from "@/components/cash-milao";
-import { HisaabAiSummary } from "@/components/hisaab-ai-summary";
-import { Money } from "@/components/money";
-import { getCustomerTransactionLabel } from "@/components/transaction-label";
+import { CashMilao } from "@/frontend/components/cash-milao";
+import { HisaabAiSummary } from "@/frontend/components/hisaab-ai-summary";
+import { Money } from "@/frontend/components/money";
+import { getCustomerTransactionLabel } from "@/frontend/components/transaction-label";
 import { formatDateIst, getIstDayRange, getTodayInputValue } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
 

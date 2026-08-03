@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { BalanceBadge } from "@/components/balance-badge";
-import { Money } from "@/components/money";
-import { QuickEntry } from "@/components/quick-entry";
-import { getCustomerTransactionLabel, getSupplierTransactionLabel } from "@/components/transaction-label";
+import { BalanceBadge } from "@/frontend/components/balance-badge";
+import { Money } from "@/frontend/components/money";
+import { QuickEntry } from "@/frontend/components/quick-entry";
+import { getCustomerTransactionLabel, getSupplierTransactionLabel } from "@/frontend/components/transaction-label";
 import { computeOldestOpenUdhaarDate, daysBetweenNow } from "@/backend/lib/aging";
 import { formatTimeIst, getIstDayRange, getTodayInputValue } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";

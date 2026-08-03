@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { addSupplierEntry } from "@/backend/actions/actions";
-import { BalanceBadge } from "@/components/balance-badge";
-import { EntryForm } from "@/components/entry-form";
-import { Money } from "@/components/money";
-import { getSupplierTransactionLabel } from "@/components/transaction-label";
+import { BalanceBadge } from "@/frontend/components/balance-badge";
+import { EntryForm } from "@/frontend/components/entry-form";
+import { Money } from "@/frontend/components/money";
+import { getSupplierTransactionLabel } from "@/frontend/components/transaction-label";
 import { formatDateIst } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
 

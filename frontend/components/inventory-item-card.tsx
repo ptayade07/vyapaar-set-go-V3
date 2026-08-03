@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { InventoryItem } from "@prisma/client";
 import { adjustInventoryQuantity, updateInventoryItem } from "@/backend/actions/inventory-actions";
-import { Money } from "@/components/money";
+import { Money } from "@/frontend/components/money";
 import { isLowStock } from "@/backend/lib/inventory";
 
 type Props = {

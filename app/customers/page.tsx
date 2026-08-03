@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createCustomer } from "@/backend/actions/actions";
-import { BalanceBadge } from "@/components/balance-badge";
+import { BalanceBadge } from "@/frontend/components/balance-badge";
 import { computeOldestOpenUdhaarDate, daysBetweenNow } from "@/backend/lib/aging";
 import { prisma } from "@/backend/lib/prisma";
 

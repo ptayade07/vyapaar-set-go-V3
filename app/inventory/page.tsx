@@ -1,5 +1,5 @@
 import { createInventoryItem } from "@/backend/actions/inventory-actions";
-import { InventoryItemCard } from "@/components/inventory-item-card";
+import { InventoryItemCard } from "@/frontend/components/inventory-item-card";
 import { isLowStock } from "@/backend/lib/inventory";
 import { prisma } from "@/backend/lib/prisma";
 

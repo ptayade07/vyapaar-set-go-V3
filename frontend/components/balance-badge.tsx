@@ -1,5 +1,5 @@
 import { getCustomerBalanceDisplay, getSupplierBalanceDisplay } from "@/backend/lib/balance";
-import { Money } from "@/components/money";
+import { Money } from "@/frontend/components/money";
 
 type Props = {
   balancePaise: number;

@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { addCustomerEntry } from "@/backend/actions/actions";
-import { BalanceBadge } from "@/components/balance-badge";
-import { EntryForm } from "@/components/entry-form";
-import { Money } from "@/components/money";
-import { PhotoThumbnail } from "@/components/photo-lightbox";
-import { ReminderButton } from "@/components/reminder-button";
-import { getCustomerTransactionLabel } from "@/components/transaction-label";
+import { BalanceBadge } from "@/frontend/components/balance-badge";
+import { EntryForm } from "@/frontend/components/entry-form";
+import { Money } from "@/frontend/components/money";
+import { PhotoThumbnail } from "@/frontend/components/photo-lightbox";
+import { ReminderButton } from "@/frontend/components/reminder-button";
+import { getCustomerTransactionLabel } from "@/frontend/components/transaction-label";
 import { formatDateIst } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
 

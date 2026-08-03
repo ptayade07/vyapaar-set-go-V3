@@ -1,4 +1,4 @@
-import { PhotoAttach } from "@/components/photo-attach";
+import { PhotoAttach } from "@/frontend/components/photo-attach";
 
 type Option = {
   value: string;
