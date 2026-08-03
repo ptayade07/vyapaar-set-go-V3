@@ -27,6 +27,7 @@ model Customer {
   createdAt      DateTime              @default(now())
   updatedAt      DateTime              @updatedAt
   transactions   CustomerTransaction[]
+  notes          Note[]
 
   @@index([name])
   @@index([phone])
@@ -39,6 +40,7 @@ model CustomerTransaction {
   type              CustomerTransactionType
   amountPaise       Int
   description       String?
+  photoUrl          String?
   balanceAfterPaise Int
   createdAt         DateTime                @default(now())
 
@@ -85,4 +87,29 @@ model InventoryItem {
   updatedAt          DateTime @updatedAt
 
   @@index([name])
+}
+
+model AppSetting {
+  key   String @id
+  value String
+}
+
+model OpeningCash {
+  date        String   @id
+  amountPaise Int
+  updatedAt   DateTime @updatedAt
+}
+
+model Note {
+  id           String    @id @default(cuid())
+  title        String
+  text         String?
+  customerId   String?
+  customer     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  reminderDate DateTime?
+  done         Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+
+  @@index([reminderDate])
+  @@index([customerId])
 }
