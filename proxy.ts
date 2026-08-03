@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const UNLOCK_COOKIE = "vsg_unlocked";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   if (request.nextUrl.pathname === "/lock") {
     return NextResponse.next();
   }
