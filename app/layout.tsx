@@ -1,4 +1,4 @@
-import { Lock } from "lucide-react";
+import { Calculator, Home, Lock, Package, StickyNote, Truck, Users } from "lucide-react";
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Work_Sans } from "next/font/google";
 import Link from "next/link";
@@ -29,12 +29,12 @@ export const viewport: Viewport = {
 };
 
 const navItems = [
-  { href: "/", label: "Dashboard" },
-  { href: "/customers", label: "Khata" },
-  { href: "/suppliers", label: "Suppliers" },
-  { href: "/inventory", label: "Inventory" },
-  { href: "/notes", label: "Notes" },
-  { href: "/hisaab", label: "Hisaab" },
+  { href: "/", label: "Dashboard", icon: Home },
+  { href: "/customers", label: "Khata", icon: Users },
+  { href: "/suppliers", label: "Suppliers", icon: Truck },
+  { href: "/inventory", label: "Inventory", icon: Package },
+  { href: "/notes", label: "Notes", icon: StickyNote },
+  { href: "/hisaab", label: "Hisaab", icon: Calculator },
 ];
 
 export default function RootLayout({
@@ -45,57 +45,76 @@ export default function RootLayout({
   return (
     <html lang="en-IN" className={`${workSans.variable} ${ibmPlexMono.variable}`}>
       <body>
-        <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-24 pt-4 sm:px-6 lg:px-8">
-          <header className="sticky top-0 z-20 -mx-4 border-b border-orange-100 bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-            <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
-              <Link href="/" className="flex min-w-0 items-center gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-600 text-lg font-bold text-white">
+        <div className="flex min-h-screen">
+          {/* Sidebar — desktop */}
+          <aside className="sticky top-0 hidden h-screen md:flex md:w-64 md:flex-col md:border-r md:border-orange-100 md:bg-white">
+            <div className="border-b border-orange-100 px-6 py-6">
+              <Link href="/" className="flex items-center gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-600 text-xl font-bold text-white">
                   व
                 </span>
-                <span className="min-w-0">
-                  <p className="truncate text-xl font-black leading-tight text-gray-900">Vyapaar Set Go</p>
-                  <p className="text-xs font-semibold text-gray-500">Digital bahi-khata</p>
+                <span>
+                  <span className="block text-lg font-bold leading-tight text-gray-900">Vyapaar</span>
+                  <span className="block text-xs leading-tight text-gray-500">Set Go</span>
                 </span>
               </Link>
-              <nav aria-label="Main navigation" className="hidden items-center gap-1 md:flex">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="rounded-xl px-4 py-3 text-sm font-bold text-gray-700 hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-600"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-                <form action={lockAction}>
-                  <button
-                    type="submit"
-                    aria-label="Lock app"
-                    className="tap-target flex items-center justify-center rounded-xl px-3 text-gray-500 hover:bg-orange-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-600"
-                  >
-                    <Lock className="h-4 w-4" />
-                  </button>
-                </form>
-              </nav>
             </div>
-          </header>
-          <main className="flex-1 py-5">{children}</main>
-          <nav
-            aria-label="Mobile navigation"
-            className="fixed inset-x-0 bottom-0 z-30 border-t border-orange-100 bg-white px-1 py-2 shadow-[0_-8px_30px_rgba(31,39,31,0.08)] md:hidden"
-          >
-            <div className="mx-auto grid max-w-md grid-cols-6 gap-0.5">
+            <nav aria-label="Main navigation" className="flex-1 space-y-1 px-3 py-4">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="tap-target flex items-center justify-center rounded-xl px-1 py-2 text-center text-[11px] font-black leading-tight text-gray-700 hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-600"
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-semibold text-gray-700 transition-all hover:bg-orange-50/60 focus:outline-none focus:ring-2 focus:ring-orange-600"
                 >
+                  <item.icon className="h-5 w-5" />
                   {item.label}
                 </Link>
               ))}
+            </nav>
+            <div className="border-t border-orange-100 p-3">
+              <form action={lockAction}>
+                <button
+                  type="submit"
+                  className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-600"
+                >
+                  <Lock className="h-4 w-4" />
+                  Lock karo
+                </button>
+              </form>
             </div>
-          </nav>
+          </aside>
+
+          {/* Main */}
+          <div className="flex min-w-0 flex-1 flex-col">
+            {/* Top bar — mobile */}
+            <div className="sticky top-0 z-30 flex items-center justify-between border-b border-orange-100 bg-white px-4 py-3 md:hidden">
+              <Link href="/" className="flex items-center gap-2">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-600 text-sm font-bold text-white">
+                  व
+                </span>
+                <span className="font-bold text-gray-900">Vyapaar Set Go</span>
+              </Link>
+            </div>
+
+            <main className="flex-1 px-4 py-6 pb-24 sm:px-6 md:pb-8 lg:px-8">{children}</main>
+
+            {/* Bottom nav — mobile */}
+            <nav
+              aria-label="Mobile navigation"
+              className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-orange-100 bg-white md:hidden"
+            >
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="tap-target flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-medium text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-600"
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
         </div>
       </body>
     </html>
