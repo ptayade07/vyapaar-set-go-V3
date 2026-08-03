@@ -8,7 +8,12 @@
   sentences the rule parser can't understand, and an AI-written end-of-day summary on the Hisaab
   page — the app works fully without it, using a deterministic template for the summary instead.
 - One free Postgres connection string is required for deploy and local persistence. Neon is the documented default and has a no-card free tier.
-- No login is included for the demo. The app opens straight to Dashboard.
+- The app opens behind a 4-digit PIN lock (default `1234`, changeable only by editing the
+  `AppSetting` row directly for now). This is a single shared household-device lock, not per-user
+  login.
+- `BLOB_READ_WRITE_TOKEN` is optional. Set it (a Vercel Blob store token) to enable receipt-photo
+  attachments on customer transactions — without it, the photo-attach control is simply hidden and
+  everything else works normally.
 
 Vyapaar Set Go is a mobile-first digital khata and shop hisaab app for small Indian shopkeepers. It tracks customer udhaar, customer advance, supplier dena, and daily cash flow with large buttons, Hinglish labels, INR formatting, and IST dates.
 
@@ -82,14 +87,21 @@ npm run seed
 
 ## Screens
 
-- Dashboard: summary cards, Quick Entry sentence box, recent transactions, and quick actions.
-- Customers: searchable khata list and add-customer form.
-- Customer Detail: passbook-style history, signed balance, entry form, reminder copy button.
+- Lock: 4-digit PIN keypad gating every other screen (session cookie, default PIN `1234`).
+- Dashboard: summary cards, a "Kal kya bacha?" aging card (7/15/30-day overdue-customer buckets),
+  Quick Entry sentence box, today's due reminders, recent transactions, and quick actions.
+- Customers: searchable khata list with `?aging=` day-count filtering and badges, and add-customer
+  form.
+- Customer Detail: passbook-style history with receipt-photo thumbnails, signed balance, entry
+  form (with optional photo attach), reminder copy + WhatsApp share buttons, and a PDF statement
+  download.
 - Suppliers: supplier list with overdue badges and add-supplier form.
 - Supplier Detail: supplier passbook, credit/payment entries, due dates.
 - Inventory: item name, quantity, purchase price, selling price; add/edit items, a +/- quantity
   stepper, and a red "Kam stock!" badge when quantity is 5 or below. No barcodes, no categories.
-- Daily Hisaab: date picker, daily totals, daily transaction list, and a "Din ka Summary" card.
+- Daily Hisaab: date picker, daily totals, a "Din ka Summary" card, a Cash Milao cash-reconciliation
+  panel, and the daily transaction list.
+- Notes: reminders optionally linked to a customer, with a due badge and a toggle-done control.
 
 ## Quick Entry (Dashboard)
 
