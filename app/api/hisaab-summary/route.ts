@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildTemplatedSummary, type HisaabSummaryData } from "@/lib/hisaab-summary";
 import { generateHisaabSummaryWithLlm } from "@/lib/hisaab-summary-llm";
+import { computeOldestOpenUdhaarDate, daysBetweenNow } from "@/lib/aging";
 import { formatDateIst, getIstDayRange, getTodayInputValue } from "@/lib/format";
 import { isLowStock } from "@/lib/inventory";
 import { prisma } from "@/lib/prisma";
@@ -8,7 +9,6 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 const OLD_UDHAAR_DAYS = 15;
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 export async function GET(request: NextRequest) {
   const dateParam = request.nextUrl.searchParams.get("date");
@@ -26,10 +26,8 @@ export async function GET(request: NextRequest) {
         name: true,
         balancePaise: true,
         transactions: {
-          where: { type: "UDHAAR" },
           orderBy: { createdAt: "asc" },
-          take: 1,
-          select: { createdAt: true },
+          select: { type: true, amountPaise: true, createdAt: true },
         },
       },
     }),
@@ -47,18 +45,15 @@ export async function GET(request: NextRequest) {
     .reduce((sum, transaction) => sum + transaction.amountPaise, 0);
   const netPaise = paymentsTotalPaise + advanceTotalPaise - udhaarTotalPaise;
 
-  const now = Date.now();
-  const cutoff = now - OLD_UDHAAR_DAYS * MS_PER_DAY;
   const oldUdhaarCustomers = debtors
-    .filter((customer) => {
-      const oldestUdhaar = customer.transactions[0];
-      return oldestUdhaar && oldestUdhaar.createdAt.getTime() < cutoff;
+    .map((customer) => {
+      const oldest = computeOldestOpenUdhaarDate(customer.transactions);
+      return oldest
+        ? { name: customer.name, balancePaise: customer.balancePaise, daysOld: daysBetweenNow(oldest) }
+        : null;
     })
-    .map((customer) => ({
-      name: customer.name,
-      balancePaise: customer.balancePaise,
-      daysOld: Math.floor((now - customer.transactions[0]!.createdAt.getTime()) / MS_PER_DAY),
-    }))
+    .filter((customer): customer is { name: string; balancePaise: number; daysOld: number } => customer !== null)
+    .filter((customer) => customer.daysOld > OLD_UDHAAR_DAYS)
     .sort((a, b) => b.daysOld - a.daysOld);
 
   const lowStockItems = inventoryItems
