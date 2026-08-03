@@ -68,9 +68,9 @@ export function QuickEntry() {
   const typeInfo = parsed?.type ? TYPE_LABELS[parsed.type] : null;
 
   return (
-    <section className="rounded-lg border border-amber-200 bg-white p-4 shadow-sm">
-      <h2 className="text-xl font-black text-[#1f271f]">Quick Entry</h2>
-      <p className="mb-3 text-sm font-semibold text-[#6f6a60]">
+    <section className="tactile-card p-4">
+      <h2 className="text-xl font-black text-gray-900">Quick Entry</h2>
+      <p className="mb-3 text-sm font-semibold text-gray-500">
         Ek line mein likho, jaise &quot;Ramesh ko 250 ka udhaar&quot;
       </p>
       <div className="flex flex-col gap-2 sm:flex-row">
@@ -85,44 +85,44 @@ export function QuickEntry() {
           }}
           placeholder="Ramesh ko 250 ka udhaar"
           aria-label="Quick entry sentence"
-          className="tap-target min-w-0 flex-1 rounded-md border border-stone-300 px-3 text-base focus:outline-none focus:ring-2 focus:ring-[#16803c]"
+          className="tap-target min-w-0 flex-1 rounded-xl border border-gray-300 px-3 text-base focus:outline-none focus:ring-2 focus:ring-orange-600"
         />
         <button
           type="button"
           onClick={handleParse}
           disabled={isPending || !text.trim()}
-          className="tap-target rounded-md bg-[#16803c] px-5 text-base font-black text-white disabled:opacity-50"
+          className="tap-target rounded-xl bg-orange-600 px-5 text-base font-black text-white hover:bg-orange-700 disabled:opacity-50"
         >
           {isPending && !parsed ? "Samajh raha hoon..." : "Parse karo"}
         </button>
       </div>
 
-      {error ? <p className="mt-3 text-sm font-bold text-[#b42318]">{error}</p> : null}
-      {saved ? <p className="mt-3 text-sm font-bold text-[#16803c]">Entry save ho gayi.</p> : null}
+      {error ? <p className="mt-3 text-sm font-bold text-red-700">{error}</p> : null}
+      {saved ? <p className="mt-3 text-sm font-bold text-green-700">Entry save ho gayi.</p> : null}
 
       {parsed && typeInfo ? (
-        <div className="mt-4 grid gap-3 rounded-md border border-amber-300 bg-amber-50 p-4">
-          <p className="text-xs font-black uppercase tracking-wide text-[#16803c]">
+        <div className="mt-4 grid gap-3 rounded-xl border border-orange-200 bg-orange-50 p-4">
+          <p className="text-xs font-black uppercase tracking-wide text-orange-700">
             {parsed.source === "llm" ? "AI se samjha" : "Rule se samjha"} — confirm karo
           </p>
           <div className="grid gap-1">
-            <p className="text-lg font-black text-[#1f271f]">
+            <p className="text-lg font-black text-gray-900">
               {parsed.customerName}
               {!parsed.customerId ? (
-                <span className="ml-2 text-sm font-bold text-[#b45309]">(naya customer)</span>
+                <span className="ml-2 text-sm font-bold text-orange-700">(naya customer)</span>
               ) : null}
             </p>
-            <p className="text-sm font-semibold text-[#6f6a60]">
+            <p className="text-sm font-semibold text-gray-500">
               {typeInfo.label} · {typeInfo.subtitle}
             </p>
-            <p className="text-2xl font-black text-[#1f271f]">{formatMoneyPaise(parsed.amountPaise ?? 0)}</p>
+            <p className="font-mono-num text-2xl font-black text-gray-900">{formatMoneyPaise(parsed.amountPaise ?? 0)}</p>
           </div>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={handleConfirm}
               disabled={isPending}
-              className="tap-target flex-1 rounded-md bg-[#f59e0b] px-4 text-base font-black text-[#1f271f] disabled:opacity-50"
+              className="tap-target flex-1 rounded-xl bg-orange-600 px-4 text-base font-black text-white hover:bg-orange-700 disabled:opacity-50"
             >
               {isPending
                 ? "Save ho raha hai..."
@@ -134,7 +134,7 @@ export function QuickEntry() {
               type="button"
               onClick={handleCancel}
               disabled={isPending}
-              className="tap-target rounded-md border border-stone-300 px-4 text-base font-black text-[#384238] disabled:opacity-50"
+              className="tap-target rounded-xl border border-gray-300 px-4 text-base font-black text-gray-700 disabled:opacity-50"
             >
               Cancel
             </button>

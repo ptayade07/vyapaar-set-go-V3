@@ -21,8 +21,8 @@ export default async function SuppliersPage() {
   return (
     <div className="grid gap-5">
       <section>
-        <p className="text-sm font-black uppercase tracking-wide text-[#16803c]">Supplier hisaab</p>
-        <h1 className="text-3xl font-black text-[#1f271f]">Suppliers</h1>
+        <p className="text-sm font-black uppercase tracking-wide text-orange-700">Supplier hisaab</p>
+        <h1 className="text-3xl font-black text-gray-900">Suppliers</h1>
       </section>
 
       <section className="grid gap-3">
@@ -32,18 +32,18 @@ export default async function SuppliersPage() {
             <Link
               key={supplier.id}
               href={`/suppliers/${supplier.id}`}
-              className="grid gap-3 rounded-lg border border-stone-200 bg-white p-4 shadow-sm hover:border-[#16803c] focus:outline-none focus:ring-2 focus:ring-[#16803c] sm:grid-cols-[1fr_auto]"
+              className="tactile-card grid gap-3 p-4 sm:grid-cols-[1fr_auto]"
             >
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="truncate text-xl font-black text-[#1f271f]">{supplier.name}</p>
+                  <p className="truncate text-xl font-black text-gray-900">{supplier.name}</p>
                   {overdue ? (
-                    <span className="rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-black text-[#b42318]">
+                    <span className="rounded-full border border-red-100 bg-red-50 px-2 py-0.5 text-xs font-black text-red-700">
                       Overdue
                     </span>
                   ) : null}
                 </div>
-                <p className="text-sm font-semibold text-[#6f6a60]">{supplier.phone || "No phone"}</p>
+                <p className="text-sm font-semibold text-gray-500">{supplier.phone || "No phone"}</p>
               </div>
               <div className="self-center">
                 <BalanceBadge balancePaise={supplier.balancePaise} kind="supplier" />
@@ -53,35 +53,35 @@ export default async function SuppliersPage() {
         })}
       </section>
 
-      <section id="add-supplier" className="rounded-lg border border-amber-200 bg-white p-4 shadow-sm">
-        <h2 className="text-xl font-black text-[#1f271f]">Add Supplier</h2>
-        <p className="mb-4 text-sm font-semibold text-[#6f6a60]">Naya supplier jodo</p>
+      <section id="add-supplier" className="tactile-card p-4">
+        <h2 className="text-xl font-black text-gray-900">Add Supplier</h2>
+        <p className="mb-4 text-sm font-semibold text-gray-500">Naya supplier jodo</p>
         <form action={createSupplier} className="grid gap-3">
-          <label className="grid gap-2 text-sm font-bold text-[#384238]">
+          <label className="grid gap-2 text-sm font-bold text-gray-700">
             Name
             <input
               name="name"
-              className="tap-target rounded-md border border-stone-300 px-3 text-base focus:outline-none focus:ring-2 focus:ring-[#16803c]"
+              className="tap-target rounded-xl border border-gray-300 px-3 text-base focus:outline-none focus:ring-2 focus:ring-orange-600"
               required
             />
           </label>
-          <label className="grid gap-2 text-sm font-bold text-[#384238]">
+          <label className="grid gap-2 text-sm font-bold text-gray-700">
             Phone
             <input
               name="phone"
               inputMode="tel"
-              className="tap-target rounded-md border border-stone-300 px-3 text-base focus:outline-none focus:ring-2 focus:ring-[#16803c]"
+              className="tap-target rounded-xl border border-gray-300 px-3 text-base focus:outline-none focus:ring-2 focus:ring-orange-600"
             />
           </label>
-          <label className="grid gap-2 text-sm font-bold text-[#384238]">
+          <label className="grid gap-2 text-sm font-bold text-gray-700">
             Note
             <textarea
               name="note"
               rows={2}
-              className="rounded-md border border-stone-300 px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#16803c]"
+              className="rounded-xl border border-gray-300 px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-orange-600"
             />
           </label>
-          <button className="tap-target rounded-md bg-[#16803c] px-5 py-3 text-lg font-black text-white focus:outline-none focus:ring-2 focus:ring-[#f59e0b]">
+          <button className="tap-target rounded-xl bg-orange-600 px-5 py-3 text-lg font-black text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-700">
             + New Supplier
           </button>
         </form>

@@ -12,10 +12,10 @@ export default async function InventoryPage() {
   return (
     <div className="grid gap-5">
       <section>
-        <p className="text-sm font-black uppercase tracking-wide text-[#16803c]">Stock register</p>
-        <h1 className="text-3xl font-black text-[#1f271f]">Inventory</h1>
+        <p className="text-sm font-black uppercase tracking-wide text-orange-700">Stock register</p>
+        <h1 className="text-3xl font-black text-gray-900">Inventory</h1>
         {lowStockCount > 0 ? (
-          <p className="mt-1 text-sm font-bold text-[#b42318]">
+          <p className="mt-1 text-sm font-bold text-red-700">
             {lowStockCount} item{lowStockCount > 1 ? "s" : ""} mein kam stock hai.
           </p>
         ) : null}
@@ -25,23 +25,23 @@ export default async function InventoryPage() {
         {items.length > 0 ? (
           items.map((item) => <InventoryItemCard key={item.id} item={item} />)
         ) : (
-          <p className="rounded-md bg-stone-100 p-4 text-sm font-bold text-stone-600">No items yet.</p>
+          <p className="rounded-xl bg-gray-100 p-4 text-sm font-bold text-gray-600">No items yet.</p>
         )}
       </section>
 
-      <section id="add-item" className="rounded-lg border border-amber-200 bg-white p-4 shadow-sm">
-        <h2 className="text-xl font-black text-[#1f271f]">Add Item</h2>
-        <p className="mb-4 text-sm font-semibold text-[#6f6a60]">Naya item jodo</p>
+      <section id="add-item" className="tactile-card p-4">
+        <h2 className="text-xl font-black text-gray-900">Add Item</h2>
+        <p className="mb-4 text-sm font-semibold text-gray-500">Naya item jodo</p>
         <form action={createInventoryItem} className="grid gap-3">
-          <label className="grid gap-2 text-sm font-bold text-[#384238]">
+          <label className="grid gap-2 text-sm font-bold text-gray-700">
             Item name
             <input
               name="name"
               required
-              className="tap-target rounded-md border border-stone-300 px-3 text-base focus:outline-none focus:ring-2 focus:ring-[#16803c]"
+              className="tap-target rounded-xl border border-gray-300 px-3 text-base focus:outline-none focus:ring-2 focus:ring-orange-600"
             />
           </label>
-          <label className="grid gap-2 text-sm font-bold text-[#384238]">
+          <label className="grid gap-2 text-sm font-bold text-gray-700">
             Starting quantity
             <input
               name="quantity"
@@ -50,11 +50,11 @@ export default async function InventoryPage() {
               step="1"
               inputMode="numeric"
               placeholder="0"
-              className="tap-target rounded-md border border-stone-300 px-3 text-lg font-black focus:outline-none focus:ring-2 focus:ring-[#16803c]"
+              className="tap-target rounded-xl border border-gray-300 px-3 text-lg font-black focus:outline-none focus:ring-2 focus:ring-orange-600"
             />
           </label>
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="grid gap-2 text-sm font-bold text-[#384238]">
+            <label className="grid gap-2 text-sm font-bold text-gray-700">
               Purchase price
               <input
                 name="purchasePrice"
@@ -64,10 +64,10 @@ export default async function InventoryPage() {
                 inputMode="decimal"
                 placeholder="₹ amount"
                 required
-                className="tap-target rounded-md border border-stone-300 px-3 text-lg font-black focus:outline-none focus:ring-2 focus:ring-[#16803c]"
+                className="tap-target rounded-xl border border-gray-300 px-3 text-lg font-black focus:outline-none focus:ring-2 focus:ring-orange-600"
               />
             </label>
-            <label className="grid gap-2 text-sm font-bold text-[#384238]">
+            <label className="grid gap-2 text-sm font-bold text-gray-700">
               Selling price
               <input
                 name="sellingPrice"
@@ -77,11 +77,11 @@ export default async function InventoryPage() {
                 inputMode="decimal"
                 placeholder="₹ amount"
                 required
-                className="tap-target rounded-md border border-stone-300 px-3 text-lg font-black focus:outline-none focus:ring-2 focus:ring-[#16803c]"
+                className="tap-target rounded-xl border border-gray-300 px-3 text-lg font-black focus:outline-none focus:ring-2 focus:ring-orange-600"
               />
             </label>
           </div>
-          <button className="tap-target rounded-md bg-[#16803c] px-5 py-3 text-lg font-black text-white focus:outline-none focus:ring-2 focus:ring-[#f59e0b]">
+          <button className="tap-target rounded-xl bg-orange-600 px-5 py-3 text-lg font-black text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-700">
             + New Item
           </button>
         </form>
