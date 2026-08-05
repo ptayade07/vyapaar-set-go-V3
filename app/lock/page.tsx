@@ -43,24 +43,23 @@ export default function LockPage() {
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-[var(--background)] p-4">
-      <div className="w-full max-w-xs">
-        <div className="mb-6 flex flex-col items-center gap-3">
-          <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-orange-600 text-3xl font-bold text-white">
+    <div className="fixed inset-0 flex items-center justify-center bg-[var(--background)] px-4">
+      <div className="w-full max-w-sm">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-orange-600 text-4xl font-bold text-white shadow-lg">
             व
-          </span>
-          <p className="text-xl font-black text-gray-900">Vyapaar Set Go</p>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900">Vyapaar Set Go</h1>
+          <p className="mt-1 text-sm text-gray-500">Apna 4-digit PIN daaliye — Enter your 4-digit PIN</p>
         </div>
 
         <div className="tactile-card p-8">
-          <p className="mb-4 text-center text-sm font-bold text-gray-500">Apna PIN daalo</p>
-
-          <div className="mb-6 flex justify-center gap-3" data-testid="pin-dots">
+          <div className="mb-6 flex justify-center gap-4" data-testid="pin-dots">
             {[0, 1, 2, 3].map((index) => (
               <span
                 key={index}
                 data-testid={`pin-dot-${index}`}
-                className={`h-4 w-4 rounded-full transition-transform ${
+                className={`h-4 w-4 rounded-full transition-all ${
                   index < pin.length ? "scale-110 bg-orange-600" : "bg-gray-200"
                 }`}
               />
@@ -68,7 +67,7 @@ export default function LockPage() {
           </div>
 
           {error ? (
-            <p data-testid="pin-error" className="mb-4 text-center text-sm font-bold text-red-700">
+            <p data-testid="pin-error" className="mb-4 text-center text-sm font-semibold text-red-600">
               Galat PIN — Wrong PIN
             </p>
           ) : null}
@@ -80,7 +79,7 @@ export default function LockPage() {
                 type="button"
                 data-testid={`pin-key-${digit}`}
                 onClick={() => pressKey(digit)}
-                className="pin-key h-16 rounded-2xl bg-orange-50 text-xl font-black text-gray-900 hover:bg-orange-100"
+                className="pin-key font-mono-num h-16 rounded-2xl bg-orange-50 text-2xl font-bold text-gray-800 hover:bg-orange-100"
               >
                 {digit}
               </button>
@@ -90,7 +89,7 @@ export default function LockPage() {
               type="button"
               data-testid="pin-key-0"
               onClick={() => pressKey("0")}
-              className="pin-key h-16 rounded-2xl bg-orange-50 text-xl font-black text-gray-900 hover:bg-orange-100"
+              className="pin-key font-mono-num h-16 rounded-2xl bg-orange-50 text-2xl font-bold text-gray-800 hover:bg-orange-100"
             >
               0
             </button>
@@ -99,14 +98,14 @@ export default function LockPage() {
               data-testid="pin-key-back"
               onClick={pressBackspace}
               aria-label="Backspace"
-              className="pin-key flex h-16 items-center justify-center rounded-2xl bg-orange-50 hover:bg-orange-100"
+              className="pin-key flex h-16 items-center justify-center rounded-2xl bg-orange-50 text-gray-800 hover:bg-orange-100"
             >
-              <Delete className="h-5 w-5 text-gray-700" />
+              <Delete className="h-6 w-6" />
             </button>
           </div>
-        </div>
 
-        <p className="mt-4 text-center text-xs font-semibold text-gray-400">Default PIN: 1234</p>
+          <p className="mt-6 text-center text-xs text-gray-400">Default PIN: 1234</p>
+        </div>
       </div>
     </div>
   );
