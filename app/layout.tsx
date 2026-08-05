@@ -38,7 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en-IN" className={`${workSans.variable} ${ibmPlexMono.variable}`}>
-      <body>
+      <body suppressHydrationWarning>
         <LangProvider>
           <div className="flex min-h-screen">
             {/* Sidebar — desktop */}
