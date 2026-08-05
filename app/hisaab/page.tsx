@@ -1,9 +1,10 @@
 import { CashMilao } from "@/frontend/components/cash-milao";
 import { HisaabAiSummary } from "@/frontend/components/hisaab-ai-summary";
+import { HisaabDatePicker } from "@/frontend/components/hisaab-date-picker";
 import { Money } from "@/frontend/components/money";
 import { T } from "@/frontend/components/t-text";
 import { getCustomerTransactionLabel } from "@/frontend/components/transaction-label";
-import { formatDateIst, getIstDayRange, getTodayInputValue } from "@/backend/lib/format";
+import { formatDateIst, formatDateTimeIst, getIstDayRange, getTodayInputValue } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -37,39 +38,30 @@ export default async function HisaabPage({ searchParams }: Props) {
   const advances = transactions
     .filter((transaction) => transaction.type === "ADVANCE")
     .reduce((sum, transaction) => sum + transaction.amountPaise, 0);
-  const net = payments + advances - udhaar;
+  const netCashIn = payments + advances;
   const supplierPaymentsTodayPaise = supplierPaymentsToday.reduce((sum, t) => sum + t.amountPaise, 0);
 
   return (
-    <div className="grid gap-5">
-      <section>
-        <T as="p" className="text-sm font-black uppercase tracking-wide text-orange-700" hi="End-of-day tally" en="End-of-day tally" />
-        <T as="h1" className="text-3xl font-black text-gray-900" hi="Aaj ka Hisaab" en="Daily Report" />
-      </section>
+    <div className="mx-auto max-w-4xl space-y-6">
+      <div>
+        <T as="h1" className="text-3xl font-bold text-gray-900" hi="Daily Hisaab" en="Daily Report" />
+        <T as="p" className="text-sm text-gray-500" hi="Din bhar ka poora hisaab" en="Full day's summary" />
+      </div>
 
-      <form action="/hisaab" className="tactile-card p-4">
-        <label className="grid gap-2 text-sm font-bold text-gray-700">
-          <T hi="Date" en="Date" />
-          <div className="flex gap-2">
-            <input
-              name="date"
-              type="date"
-              defaultValue={selectedDate}
-              className="tap-target min-w-0 flex-1 rounded-xl border border-gray-300 px-3 text-base font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-600"
-            />
-            <button className="tap-target rounded-xl bg-orange-600 px-4 font-black text-white hover:bg-orange-700">
-              <T hi="Dekho" en="Show" />
-            </button>
-          </div>
-        </label>
-      </form>
+      <HisaabDatePicker date={selectedDate} displayDate={formatDateIst(start)} />
 
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <ReportCard title="Udhaar Given" subtitle="Credit sales" amountPaise={udhaar} />
-        <ReportCard title="Payments Received" subtitle="Cash collected" amountPaise={payments} />
-        <ReportCard title="Advance Collected" subtitle="Paid ahead" amountPaise={advances} />
-        <ReportCard title="Net for Day" subtitle="Cash minus udhaar" amountPaise={net} />
-      </section>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <SummaryTile labelHi="Udhaar Diya" labelEn="Credit Given" amountPaise={udhaar} color="text-red-600" />
+        <SummaryTile labelHi="Payment Liya" labelEn="Received" amountPaise={payments} color="text-green-700" />
+        <SummaryTile labelHi="Advance Liya" labelEn="Advance Rcvd" amountPaise={advances} color="text-blue-700" />
+        <SummaryTile
+          labelHi="Net Cash In"
+          labelEn="Net Cash In"
+          amountPaise={netCashIn}
+          color="text-orange-700"
+          tint
+        />
+      </div>
 
       <HisaabAiSummary date={selectedDate} />
 
@@ -81,48 +73,61 @@ export default async function HisaabPage({ searchParams }: Props) {
         supplierPaymentsTodayPaise={supplierPaymentsTodayPaise}
       />
 
-      <section className="tactile-card p-4">
-        <T as="h2" className="text-xl font-black text-gray-900" hi="Transactions" en="Transactions" />
-        <p className="mb-4 text-sm font-semibold text-gray-500">{formatDateIst(start)} entries</p>
-        <div className="grid gap-2">
-          {transactions.length > 0 ? (
+      <div className="tactile-card overflow-hidden">
+        <div className="p-6 pb-2">
+          <T as="h2" className="text-xl font-bold text-gray-900" hi="Din ka poora hisaab" en="All transactions" />
+        </div>
+        <div className="divide-y divide-gray-100">
+          {transactions.length === 0 ? (
+            <T
+              as="p"
+              className="p-6 text-center text-gray-400"
+              hi="Is din koi transaction nahi hua."
+              en="No transactions on this date."
+            />
+          ) : (
             transactions.map((transaction) => {
-              const label = getCustomerTransactionLabel(transaction.type);
+              const meta = getCustomerTransactionLabel(transaction.type);
               return (
-                <div
-                  key={transaction.id}
-                  className="grid grid-cols-[1fr_auto] gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3"
-                >
+                <div key={transaction.id} className="flex items-center justify-between gap-4 p-4 sm:p-5">
                   <div className="min-w-0">
-                    <p className="truncate text-base font-black text-gray-900">{transaction.customer.name}</p>
-                    <p className="text-sm font-semibold text-gray-500">
-                      {label.label} · {transaction.description || label.subtitle}
+                    <p className="truncate font-semibold text-gray-900">{transaction.customer.name}</p>
+                    <p className="text-xs text-gray-500">
+                      {formatDateTimeIst(transaction.createdAt)} · {meta.label}
+                      {transaction.description ? ` · ${transaction.description}` : ""}
                     </p>
                   </div>
-                  <Money amountPaise={transaction.amountPaise} className="text-lg font-black text-gray-900" />
+                  <span className={`font-mono-num text-lg font-bold ${meta.amountColor}`}>
+                    {meta.sign}
+                    <Money amountPaise={transaction.amountPaise} />
+                  </span>
                 </div>
               );
             })
-          ) : (
-            <p className="rounded-xl bg-gray-100 p-4 text-sm font-bold text-gray-600">No entries for this date.</p>
           )}
         </div>
-      </section>
+      </div>
     </div>
   );
 }
 
-function ReportCard({ title, subtitle, amountPaise }: { title: string; subtitle: string; amountPaise: number }) {
-  const color = amountPaise < 0 ? "text-red-700" : "text-gray-900";
-
+function SummaryTile({
+  labelHi,
+  labelEn,
+  amountPaise,
+  color,
+  tint,
+}: {
+  labelHi: string;
+  labelEn: string;
+  amountPaise: number;
+  color: string;
+  tint?: boolean;
+}) {
   return (
-    <div className="tactile-card p-6">
-      <p className="text-sm font-black text-gray-700">{title}</p>
-      <p className="text-xs font-semibold text-gray-500">{subtitle}</p>
-      <p className={`mt-4 text-3xl font-black ${color}`}>
-        {amountPaise < 0 ? "-" : ""}
-        <Money amountPaise={Math.abs(amountPaise)} />
-      </p>
+    <div className={`tactile-card p-5 ${tint ? "border-orange-200 bg-orange-50" : ""}`}>
+      <T as="p" className="text-xs text-gray-500" hi={labelHi} en={labelEn} />
+      <Money amountPaise={amountPaise} className={`font-mono-num mt-2 block text-2xl font-bold ${color}`} />
     </div>
   );
 }
