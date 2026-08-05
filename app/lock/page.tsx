@@ -4,6 +4,7 @@ import { Delete } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { verifyPinAction } from "@/backend/actions/actions";
+import { SplashScreen } from "@/frontend/components/splash-screen";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
@@ -44,6 +45,7 @@ export default function LockPage() {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-[var(--background)] px-4">
+      <SplashScreen />
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-orange-600 text-4xl font-bold text-white shadow-lg">

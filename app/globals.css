@@ -137,6 +137,50 @@
   .pin-key:active {
     transform: scale(0.92);
   }
+
+  @keyframes splash-logo-in {
+    0% {
+      transform: scale(0.4);
+      opacity: 0;
+    }
+    60% {
+      transform: scale(1.08);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes splash-text-in {
+    0% {
+      transform: translateY(8px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes splash-fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+
+  .animate-splash-logo-in {
+    animation: splash-logo-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  .animate-splash-text-in {
+    animation: splash-text-in 0.4s ease-out 0.2s both;
+  }
+
+  .animate-splash-fade-out {
+    animation: splash-fade-out 0.35s ease-in forwards;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -148,5 +192,10 @@
   }
   .tactile-card:hover {
     transform: none;
+  }
+  .animate-splash-logo-in,
+  .animate-splash-text-in,
+  .animate-splash-fade-out {
+    animation-duration: 0.01ms !important;
   }
 }
