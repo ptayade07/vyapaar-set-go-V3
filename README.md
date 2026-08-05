@@ -50,8 +50,15 @@ npm run test:e2e
 ## Database Setup With Neon
 
 1. Go to `https://neon.tech` and create a free project.
-2. Copy the pooled Postgres connection string.
-3. Put it in `.env` as `DATABASE_URL="postgresql://...sslmode=require"`.
+2. Copy the **pooled** Postgres connection string — Neon's dashboard shows both a direct and a
+   pooled string; the pooled one's hostname has `-pooler` in it (e.g.
+   `ep-xxx-pooler.c-2.region.aws.neon.tech`, not `ep-xxx.c-2.region.aws.neon.tech`). The direct
+   connection has a much lower concurrent-connection ceiling and will throw
+   `Unable to start a transaction in the given time` under any real load, since every Server
+   Action here opens its own connection. Append `&pgbouncer=true` to the pooled URL too — Prisma
+   needs it to disable prepared statements, which don't work through PgBouncer's transaction
+   pooling mode.
+3. Put it in `.env` as `DATABASE_URL="postgresql://...-pooler...?sslmode=require&pgbouncer=true"`.
 4. Run `npm run prisma:push`.
 5. Run `npm run seed`.
 
