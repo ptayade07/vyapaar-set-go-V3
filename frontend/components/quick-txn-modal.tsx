@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { useEffect, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { PhotoAttach } from "@/frontend/components/photo-attach";
+import { useT } from "@/frontend/lib/i18n";
 
 export type CustomerTxnType = "UDHAAR" | "PAYMENT" | "ADVANCE";
 
@@ -37,6 +38,7 @@ type Props = {
 };
 
 export function QuickTxnModal({ type, customerName, action, allowPhoto, onClose }: Props) {
+  const t = useT();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -119,9 +121,11 @@ export function QuickTxnModal({ type, customerName, action, allowPhoto, onClose 
             disabled={isPending}
             className={`h-16 w-full rounded-2xl text-lg font-bold text-white transition active:scale-95 disabled:opacity-60 ${meta.buttonClass}`}
           >
-            {isPending ? "..." : "Enter dabao — Save"}
+            {isPending ? "..." : t("Enter dabao — Save", "Press Enter — Save")}
           </button>
-          <p className="text-center text-xs text-gray-400">Tip: Enter dabao save karne ke liye</p>
+          <p className="text-center text-xs text-gray-400">
+            {t("Tip: Enter dabao save karne ke liye", "Tip: Press Enter to save")}
+          </p>
         </form>
       </div>
     </div>

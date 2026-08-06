@@ -58,7 +58,7 @@ export function PhotoLightbox({ src, alt, onClose }: LightboxProps) {
         type="button"
         onClick={onClose}
         aria-label="Close"
-        className="tap-target absolute right-4 top-4 rounded-full bg-white/10 px-4 text-lg font-black text-white hover:bg-white/20"
+        className="tap-target absolute right-4 top-4 rounded-full bg-white/10 px-4 text-lg font-bold text-white hover:bg-white/20"
       >
         Close
       </button>

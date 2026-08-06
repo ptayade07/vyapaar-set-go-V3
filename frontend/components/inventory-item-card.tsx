@@ -28,7 +28,7 @@ export function InventoryItemCard({ item }: Props) {
   }
 
   function handleDelete() {
-    if (!window.confirm(`Delete ${item.name}?`)) return;
+    if (!window.confirm(t(`${item.name} delete karein?`, `Delete ${item.name}?`))) return;
     startTransition(async () => {
       await deleteInventoryItem(item.id);
       router.refresh();
@@ -66,7 +66,7 @@ export function InventoryItemCard({ item }: Props) {
               inputMode="decimal"
               defaultValue={(item.purchasePricePaise / 100).toFixed(2)}
               required
-              className="tap-target rounded-xl border border-gray-300 bg-white px-3 text-lg font-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-600"
+              className="tap-target rounded-xl border border-gray-300 bg-white px-3 text-lg font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-600"
             />
           </label>
           <label className="grid gap-2 text-sm font-bold text-gray-700">
@@ -79,7 +79,7 @@ export function InventoryItemCard({ item }: Props) {
               inputMode="decimal"
               defaultValue={(item.sellingPricePaise / 100).toFixed(2)}
               required
-              className="tap-target rounded-xl border border-gray-300 bg-white px-3 text-lg font-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-600"
+              className="tap-target rounded-xl border border-gray-300 bg-white px-3 text-lg font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-600"
             />
           </label>
         </div>
@@ -87,7 +87,7 @@ export function InventoryItemCard({ item }: Props) {
           <button
             type="submit"
             disabled={isPending}
-            className="tap-target flex-1 rounded-xl bg-orange-600 px-4 text-base font-black text-white hover:bg-orange-700 disabled:opacity-50"
+            className="tap-target flex-1 rounded-xl bg-orange-600 px-4 text-base font-bold text-white hover:bg-orange-700 disabled:opacity-50"
           >
             {isPending ? t("Save ho raha hai...", "Saving...") : t("Save", "Save")}
           </button>
@@ -95,7 +95,7 @@ export function InventoryItemCard({ item }: Props) {
             type="button"
             onClick={() => setEditing(false)}
             disabled={isPending}
-            className="tap-target rounded-xl border border-gray-300 bg-white px-4 text-base font-black text-gray-700 disabled:opacity-50"
+            className="tap-target rounded-xl border border-gray-300 bg-white px-4 text-base font-bold text-gray-700 disabled:opacity-50"
           >
             {t("Cancel", "Cancel")}
           </button>
@@ -122,7 +122,7 @@ export function InventoryItemCard({ item }: Props) {
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="mt-2 text-xs font-black text-orange-700 underline-offset-2 hover:underline"
+          className="mt-2 text-xs font-bold text-orange-700 underline-offset-2 hover:underline"
         >
           {t("Edit", "Edit")}
         </button>

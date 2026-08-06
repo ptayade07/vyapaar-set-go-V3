@@ -4,6 +4,7 @@ import { Trash2 } from "lucide-react";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteCustomerTransaction } from "@/backend/actions/actions";
+import { useT } from "@/frontend/lib/i18n";
 
 type Props = {
   customerId: string;
@@ -11,11 +12,12 @@ type Props = {
 };
 
 export function DeleteTxnButton({ customerId, transactionId }: Props) {
+  const t = useT();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   function handleDelete() {
-    if (!window.confirm("Delete this transaction?")) return;
+    if (!window.confirm(t("Yeh entry delete karein?", "Delete this transaction?"))) return;
     startTransition(async () => {
       await deleteCustomerTransaction(customerId, transactionId);
       router.refresh();

@@ -5,6 +5,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteNote, toggleNote } from "@/backend/actions/notes-actions";
 import { formatDateIst } from "@/backend/lib/format";
+import { useT } from "@/frontend/lib/i18n";
 
 type Props = {
   note: {
@@ -18,6 +19,7 @@ type Props = {
 };
 
 export function NoteRow({ note }: Props) {
+  const t = useT();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const due = Boolean(note.reminderDate) && !note.done && note.reminderDate!.getTime() <= Date.now();
@@ -30,7 +32,7 @@ export function NoteRow({ note }: Props) {
   }
 
   function handleDelete() {
-    if (!window.confirm("Delete this note?")) return;
+    if (!window.confirm(t("Yeh note delete karein?", "Delete this note?"))) return;
     startTransition(async () => {
       await deleteNote(note.id);
       router.refresh();

@@ -3,8 +3,10 @@
 import { Camera } from "lucide-react";
 import { useRef, useState } from "react";
 import { uploadTransactionPhoto } from "@/backend/actions/actions";
+import { useT } from "@/frontend/lib/i18n";
 
 export function PhotoAttach() {
+  const t = useT();
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -16,11 +18,11 @@ export function PhotoAttach() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setError("Sirf image files allowed hain.");
+      setError(t("Sirf image files allowed hain.", "Only image files are allowed."));
       return;
     }
     if (file.size > 8 * 1024 * 1024) {
-      setError("Photo 8MB se choti honi chahiye.");
+      setError(t("Photo 8MB se choti honi chahiye.", "Photo must be under 8MB."));
       return;
     }
 
@@ -39,7 +41,11 @@ export function PhotoAttach() {
     } else {
       setPreview(null);
       URL.revokeObjectURL(objectUrl);
-      setError(result.reason === "too_large" ? "Photo 8MB se choti honi chahiye." : "Photo upload nahi hui.");
+      setError(
+        result.reason === "too_large"
+          ? t("Photo 8MB se choti honi chahiye.", "Photo must be under 8MB.")
+          : t("Photo upload nahi hui.", "Photo upload failed."),
+      );
     }
   }
 
@@ -67,13 +73,13 @@ export function PhotoAttach() {
           <img src={preview} alt="Receipt preview" className="h-32 w-full rounded-xl object-cover" />
           {uploading ? (
             <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/40 text-sm font-bold text-white">
-              Uploading...
+              {t("Upload ho rahi hai...", "Uploading...")}
             </div>
           ) : (
             <button
               type="button"
               onClick={removePhoto}
-              className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-sm font-black text-white"
+              className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-sm font-bold text-white"
             >
               ×
             </button>
@@ -85,7 +91,7 @@ export function PhotoAttach() {
           onClick={() => inputRef.current?.click()}
           className="tap-target flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 text-sm font-bold text-gray-500 hover:border-orange-400"
         >
-          <Camera className="h-4 w-4" /> Photo attach karo
+          <Camera className="h-4 w-4" /> {t("Photo attach karo (optional)", "Attach photo (optional)")}
         </button>
       )}
       {error ? <p className="text-xs font-bold text-red-700">{error}</p> : null}
