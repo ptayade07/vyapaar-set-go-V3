@@ -58,9 +58,26 @@ npm run test:e2e
    Action here opens its own connection. Append `&pgbouncer=true` to the pooled URL too — Prisma
    needs it to disable prepared statements, which don't work through PgBouncer's transaction
    pooling mode.
-3. Put it in `.env` as `DATABASE_URL="postgresql://...-pooler...?sslmode=require&pgbouncer=true"`.
-4. Run `npm run prisma:push`.
-5. Run `npm run seed`.
+3. Also append `&connection_limit=10&pool_timeout=20`. Prisma's own connection pool defaults to a
+   single connection under `pgbouncer=true`, which is too few for this app — the Dashboard alone
+   fires 8 queries in parallel via `Promise.all`, and they'll queue up and time out against a pool
+   of 1 with `Timed out fetching a new connection from the connection pool`. 10 comfortably covers
+   every page's peak concurrency.
+4. Put it in `.env` as:
+   `DATABASE_URL="postgresql://...-pooler...?sslmode=require&pgbouncer=true&connection_limit=10&pool_timeout=20"`.
+5. Run `npm run prisma:push`.
+6. Run `npm run seed`.
+
+**Expect the first request after any idle period to be slow (a few seconds), sometimes with a
+`prisma:error ... kind: Closed` line in the server log immediately before it.** That's Neon's
+free-tier compute autosuspending after inactivity and cold-starting on the next query — not a bug
+in this app, and not fixable from Prisma/connection config, since it's the underlying Postgres
+compute itself spinning back up. Measured directly (an isolated Prisma query, no Next.js, no
+connection-pool contention): every query round-trip took ~1.4s even fully warm in one test
+environment — that's the network path to Neon from wherever the app is running, not something app
+code controls. If consistent low latency matters (a live demo, judged submission), either keep the
+app "warm" with a low-traffic uptime pinger a few minutes before it's needed, or disable autosuspend
+on Neon's paid tier.
 
 ## 5-Minute Vercel + Neon Deploy
 
