@@ -1,12 +1,5 @@
 import { expect, test } from "@playwright/test";
-
-async function unlockPin(page: import("@playwright/test").Page) {
-  await page.goto("/");
-  for (const digit of ["1", "2", "3", "4"]) {
-    await page.getByTestId(`pin-key-${digit}`).click();
-  }
-  await page.waitForURL("/");
-}
+import { unlockPin } from "./utils";
 
 test("create customer, add udhaar, then overpay into advance", async ({ page }) => {
   const customerName = `Codex Test ${Date.now()}`;
