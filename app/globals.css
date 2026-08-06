@@ -198,4 +198,7 @@
   .animate-splash-fade-out {
     animation-duration: 0.01ms !important;
   }
+  .animate-pulse {
+    animation: none;
+  }
 }
