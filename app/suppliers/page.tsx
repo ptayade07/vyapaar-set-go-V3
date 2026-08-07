@@ -4,22 +4,38 @@ import { createSupplier } from "@/backend/actions/actions";
 import { prisma } from "@/backend/lib/prisma";
 import { AddPersonPanel } from "@/frontend/components/add-person-panel";
 import { BalanceText } from "@/frontend/components/balance-text";
+import { Pagination } from "@/frontend/components/pagination";
 import { T } from "@/frontend/components/t-text";
 
 export const dynamic = "force-dynamic";
 
-export default async function SuppliersPage() {
-  const suppliers = await prisma.supplier.findMany({
-    include: {
-      transactions: {
-        where: {
-          type: "CREDIT",
-          dueDate: { lt: new Date() },
+const PAGE_SIZE = 20;
+
+type Props = {
+  searchParams?: Promise<{ page?: string }>;
+};
+
+export default async function SuppliersPage({ searchParams }: Props) {
+  const params = await searchParams;
+  const page = Math.max(1, Number(params?.page) || 1);
+
+  const [suppliers, total] = await Promise.all([
+    prisma.supplier.findMany({
+      include: {
+        transactions: {
+          where: {
+            type: "CREDIT",
+            dueDate: { lt: new Date() },
+          },
         },
       },
-    },
-    orderBy: [{ balancePaise: "desc" }, { name: "asc" }],
-  });
+      orderBy: [{ balancePaise: "desc" }, { name: "asc" }],
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+    prisma.supplier.count(),
+  ]);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -65,6 +81,8 @@ export default async function SuppliersPage() {
           );
         })}
       </div>
+
+      <Pagination page={page} totalPages={totalPages} buildHref={(p) => (p > 1 ? `/suppliers?page=${p}` : "/suppliers")} />
     </div>
   );
 }

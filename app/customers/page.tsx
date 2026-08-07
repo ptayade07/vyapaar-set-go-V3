@@ -5,9 +5,13 @@ import { computeOldestOpenUdhaarDate, daysBetweenNow } from "@/backend/lib/aging
 import { prisma } from "@/backend/lib/prisma";
 import { AddPersonPanel } from "@/frontend/components/add-person-panel";
 import { BalanceText } from "@/frontend/components/balance-text";
+import { Pagination } from "@/frontend/components/pagination";
 import { T } from "@/frontend/components/t-text";
+import type { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
+
+const PAGE_SIZE = 20;
 
 const SORT_OPTIONS = [
   { key: "udhaar", labelHi: "Sabse zyada udhaar", labelEn: "Highest Udhaar", icon: ArrowDownWideNarrow },
@@ -15,8 +19,14 @@ const SORT_OPTIONS = [
   { key: "az", labelHi: "A-Z", labelEn: "A-Z", icon: ArrowDownAZ },
 ] as const;
 
+const SORT_ORDER_BY: Record<(typeof SORT_OPTIONS)[number]["key"], Prisma.CustomerOrderByWithRelationInput> = {
+  udhaar: { balancePaise: "desc" },
+  recent: { createdAt: "desc" },
+  az: { name: "asc" },
+};
+
 type Props = {
-  searchParams?: Promise<{ q?: string; aging?: string; sort?: string }>;
+  searchParams?: Promise<{ q?: string; aging?: string; sort?: string; page?: string }>;
 };
 
 export default async function CustomersPage({ searchParams }: Props) {
@@ -24,40 +34,77 @@ export default async function CustomersPage({ searchParams }: Props) {
   const query = String(params?.q ?? "").trim();
   const agingThreshold = params?.aging ? Number(params.aging) : null;
   const sortKey = params?.sort === "recent" || params?.sort === "az" ? params.sort : "udhaar";
+  const page = Math.max(1, Number(params?.page) || 1);
 
-  const customers = await prisma.customer.findMany({
-    where: query
-      ? {
-          OR: [
-            { name: { contains: query, mode: "insensitive" } },
-            { phone: { contains: query, mode: "insensitive" } },
-          ],
-        }
-      : undefined,
-    include: {
-      transactions: {
-        where: { type: "UDHAAR" },
-        select: { type: true, amountPaise: true, createdAt: true },
-      },
-    },
-  });
+  const searchWhere: Prisma.CustomerWhereInput | undefined = query
+    ? {
+        OR: [
+          { name: { contains: query, mode: "insensitive" } },
+          { phone: { contains: query, mode: "insensitive" } },
+        ],
+      }
+    : undefined;
 
-  const withAging = customers.map((customer) => {
-    const oldest = customer.balancePaise > 0 ? computeOldestOpenUdhaarDate(customer.transactions) : null;
-    return { ...customer, oldestUdhaarDays: oldest ? daysBetweenNow(oldest) : null };
-  });
+  function buildHref(nextPage: number) {
+    const p = new URLSearchParams();
+    if (query) p.set("q", query);
+    if (agingThreshold !== null) p.set("aging", String(agingThreshold));
+    if (sortKey !== "udhaar") p.set("sort", sortKey);
+    if (nextPage > 1) p.set("page", String(nextPage));
+    const qs = p.toString();
+    return qs ? `/customers?${qs}` : "/customers";
+  }
 
-  let visible = withAging;
+  let visible: Array<{
+    id: string;
+    name: string;
+    phone: string | null;
+    balancePaise: number;
+    oldestUdhaarDays: number | null;
+  }>;
+  let totalPages: number;
+  let agedTotal = 0;
+
   if (agingThreshold !== null) {
-    visible = visible
+    // Aging needs a customer's full UDHAAR history to walk the FIFO queue, so this branch can't
+    // be paginated at the query level -- but it's already bounded to debtors, not every customer.
+    const debtors = await prisma.customer.findMany({
+      where: { ...searchWhere, balancePaise: { gt: 0 } },
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        balancePaise: true,
+        transactions: {
+          where: { type: "UDHAAR" },
+          select: { type: true, amountPaise: true, createdAt: true },
+        },
+      },
+    });
+    const aged = debtors
+      .map((customer) => {
+        const oldest = computeOldestOpenUdhaarDate(customer.transactions);
+        return { ...customer, oldestUdhaarDays: oldest ? daysBetweenNow(oldest) : null };
+      })
       .filter((customer) => (customer.oldestUdhaarDays ?? -1) >= agingThreshold)
       .sort((a, b) => (b.oldestUdhaarDays ?? 0) - (a.oldestUdhaarDays ?? 0));
-  } else if (sortKey === "recent") {
-    visible = [...visible].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-  } else if (sortKey === "az") {
-    visible = [...visible].sort((a, b) => a.name.localeCompare(b.name));
+
+    agedTotal = aged.length;
+    totalPages = Math.max(1, Math.ceil(aged.length / PAGE_SIZE));
+    visible = aged.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   } else {
-    visible = [...visible].sort((a, b) => b.balancePaise - a.balancePaise);
+    const [customers, total] = await Promise.all([
+      prisma.customer.findMany({
+        where: searchWhere,
+        select: { id: true, name: true, phone: true, balancePaise: true },
+        orderBy: SORT_ORDER_BY[sortKey],
+        skip: (page - 1) * PAGE_SIZE,
+        take: PAGE_SIZE,
+      }),
+      prisma.customer.count({ where: searchWhere }),
+    ]);
+    totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    visible = customers.map((customer) => ({ ...customer, oldestUdhaarDays: null }));
   }
 
   return (
@@ -116,8 +163,8 @@ export default async function CustomersPage({ searchParams }: Props) {
               <T
                 as="p"
                 className="text-xs text-gray-600"
-                hi={`${visible.length} grahak — purane pehle`}
-                en={`${visible.length} customers — oldest first`}
+                hi={`${agedTotal} grahak — purane pehle`}
+                en={`${agedTotal} customers — oldest first`}
               />
             </div>
           </div>
@@ -168,6 +215,8 @@ export default async function CustomersPage({ searchParams }: Props) {
           </Link>
         ))}
       </div>
+
+      <Pagination page={page} totalPages={totalPages} buildHref={buildHref} />
     </div>
   );
 }

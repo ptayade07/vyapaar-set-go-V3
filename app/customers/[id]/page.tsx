@@ -8,6 +8,7 @@ import { prisma } from "@/backend/lib/prisma";
 import { CustomerTxnButtons } from "@/frontend/components/customer-txn-buttons";
 import { DeleteTxnButton } from "@/frontend/components/delete-txn-button";
 import { Money } from "@/frontend/components/money";
+import { Pagination } from "@/frontend/components/pagination";
 import { PhotoThumbnail } from "@/frontend/components/photo-lightbox";
 import { ReminderButton } from "@/frontend/components/reminder-button";
 import { T } from "@/frontend/components/t-text";
@@ -15,24 +16,35 @@ import { getCustomerTransactionLabel } from "@/frontend/components/transaction-l
 
 export const dynamic = "force-dynamic";
 
+const PAGE_SIZE = 25;
+
 type Props = {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ page?: string }>;
 };
 
-export default async function CustomerDetailPage({ params }: Props) {
+export default async function CustomerDetailPage({ params, searchParams }: Props) {
   const { id } = await params;
-  const customer = await prisma.customer.findUnique({
-    where: { id },
-    include: {
-      transactions: {
-        orderBy: { createdAt: "asc" },
-      },
-    },
-  });
+  const sp = await searchParams;
+  const page = Math.max(1, Number(sp?.page) || 1);
 
+  const customer = await prisma.customer.findUnique({ where: { id } });
   if (!customer) {
     notFound();
   }
+
+  // balanceAfterPaise is snapshotted per row at write time, so a single page of newest-first
+  // rows already carries the correct running balance -- no need to load the full history.
+  const [transactions, transactionCount] = await Promise.all([
+    prisma.customerTransaction.findMany({
+      where: { customerId: id },
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+    prisma.customerTransaction.count({ where: { customerId: id } }),
+  ]);
+  const totalPages = Math.max(1, Math.ceil(transactionCount / PAGE_SIZE));
 
   const action = addCustomerEntry.bind(null, customer.id);
   const balanceColor =
@@ -44,7 +56,6 @@ export default async function CustomerDetailPage({ params }: Props) {
       : balanceDisplay.tone === "advance"
         ? "bg-green-50 text-green-700"
         : "bg-gray-100 text-gray-600";
-  const recentFirst = [...customer.transactions].reverse();
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -96,10 +107,10 @@ export default async function CustomerDetailPage({ params }: Props) {
           <T as="p" className="text-sm text-gray-500" hi="Har transaction ki poori history" en="Full transaction history" />
         </div>
         <div className="divide-y divide-gray-100">
-          {recentFirst.length === 0 ? (
+          {transactions.length === 0 ? (
             <T as="p" className="p-6 text-center text-gray-400" hi="Koi transaction nahi hai." en="No transactions yet." />
           ) : (
-            recentFirst.map((transaction) => {
+            transactions.map((transaction) => {
               const meta = getCustomerTransactionLabel(transaction.type);
               const balanceCaption =
                 transaction.balanceAfterPaise > 0
@@ -143,6 +154,12 @@ export default async function CustomerDetailPage({ params }: Props) {
           )}
         </div>
       </div>
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        buildHref={(p) => (p > 1 ? `/customers/${customer.id}?page=${p}` : `/customers/${customer.id}`)}
+      />
     </div>
   );
 }
