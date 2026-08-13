@@ -18,23 +18,44 @@ enum SupplierTransactionType {
   PAYMENT
 }
 
-model Customer {
-  id             String                @id @default(cuid())
-  name           String
-  phone          String?
-  note           String?
-  balancePaise   Int                   @default(0)
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
-  transactions   CustomerTransaction[]
-  notes          Note[]
+model Shop {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
 
+  customers   Customer[]
+  suppliers   Supplier[]
+  items       InventoryItem[]
+  notes       Note[]
+  settings    AppSetting[]
+  openingCash OpeningCash[]
+
+  customerTransactions CustomerTransaction[]
+  supplierTransactions SupplierTransaction[]
+}
+
+model Customer {
+  id           String                @id @default(cuid())
+  shopId       String
+  shop         Shop                  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  name         String
+  phone        String?
+  note         String?
+  balancePaise Int                   @default(0)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  transactions CustomerTransaction[]
+  notes        Note[]
+
+  @@index([shopId])
   @@index([name])
   @@index([phone])
 }
 
 model CustomerTransaction {
   id                String                  @id @default(cuid())
+  shopId            String
+  shop              Shop                    @relation(fields: [shopId], references: [id], onDelete: Cascade)
   customerId        String
   customer          Customer                @relation(fields: [customerId], references: [id], onDelete: Cascade)
   type              CustomerTransactionType
@@ -44,25 +65,31 @@ model CustomerTransaction {
   balanceAfterPaise Int
   createdAt         DateTime                @default(now())
 
+  @@index([shopId, createdAt])
   @@index([customerId, createdAt])
   @@index([createdAt])
 }
 
 model Supplier {
-  id             String                @id @default(cuid())
-  name           String
-  phone          String?
-  note           String?
-  balancePaise   Int                   @default(0)
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
-  transactions   SupplierTransaction[]
+  id           String                @id @default(cuid())
+  shopId       String
+  shop         Shop                  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  name         String
+  phone        String?
+  note         String?
+  balancePaise Int                   @default(0)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  transactions SupplierTransaction[]
 
+  @@index([shopId])
   @@index([name])
 }
 
 model SupplierTransaction {
   id                String                  @id @default(cuid())
+  shopId            String
+  shop              Shop                    @relation(fields: [shopId], references: [id], onDelete: Cascade)
   supplierId        String
   supplier          Supplier                @relation(fields: [supplierId], references: [id], onDelete: Cascade)
   type              SupplierTransactionType
@@ -72,6 +99,7 @@ model SupplierTransaction {
   balanceAfterPaise Int
   createdAt         DateTime                @default(now())
 
+  @@index([shopId, createdAt])
   @@index([supplierId, createdAt])
   @@index([createdAt])
   @@index([dueDate])
@@ -79,6 +107,8 @@ model SupplierTransaction {
 
 model InventoryItem {
   id                 String   @id @default(cuid())
+  shopId             String
+  shop               Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
   name               String
   quantity           Int      @default(0)
   purchasePricePaise Int
@@ -86,22 +116,35 @@ model InventoryItem {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
+  @@index([shopId])
   @@index([name])
 }
 
 model AppSetting {
-  key   String @id
-  value String
+  id     String @id @default(cuid())
+  shopId String
+  shop   Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  key    String
+  value  String
+
+  @@unique([shopId, key])
 }
 
 model OpeningCash {
-  date        String   @id
+  id          String   @id @default(cuid())
+  shopId      String
+  shop        Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  date        String
   amountPaise Int
   updatedAt   DateTime @updatedAt
+
+  @@unique([shopId, date])
 }
 
 model Note {
   id           String    @id @default(cuid())
+  shopId       String
+  shop         Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
   title        String
   text         String?
   customerId   String?
@@ -110,6 +153,7 @@ model Note {
   done         Boolean   @default(false)
   createdAt    DateTime  @default(now())
 
+  @@index([shopId])
   @@index([reminderDate])
   @@index([customerId])
 }
