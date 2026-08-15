@@ -23,6 +23,7 @@ model Shop {
   name      String
   createdAt DateTime @default(now())
 
+  users       User[]
   customers   Customer[]
   suppliers   Supplier[]
   items       InventoryItem[]
@@ -32,6 +33,20 @@ model Shop {
 
   customerTransactions CustomerTransaction[]
   supplierTransactions SupplierTransaction[]
+}
+
+// One shopkeeper login per shop for now (Stage 2 scope). shopId is a plain FK, not unique, so a
+// shop having multiple staff logins later doesn't need a migration -- Stage 2 just never creates
+// more than one User per Shop.
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  shopId       String
+  shop         Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@index([shopId])
 }
 
 model Customer {
