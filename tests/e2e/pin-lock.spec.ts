@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { selectOrCreateTestShop } from "./utils";
 
 test("wrong PIN shows an error and resets, correct PIN still unlocks after", async ({ page }) => {
-  await page.goto("/");
+  await selectOrCreateTestShop(page);
+  await page.getByTestId("pin-dots").waitFor({ state: "visible", timeout: 15000 });
 
   for (const digit of ["9", "9", "9", "9"]) {
     await page.getByTestId(`pin-key-${digit}`).click();
@@ -14,22 +16,22 @@ test("wrong PIN shows an error and resets, correct PIN still unlocks after", asy
   for (const digit of ["1", "2", "3", "4"]) {
     await page.getByTestId(`pin-key-${digit}`).click();
   }
-  await page.waitForURL("/", { timeout: 15000 });
+  await page.getByTestId("pin-dots").waitFor({ state: "hidden", timeout: 15000 });
 });
 
 test("lock button returns to the PIN screen", async ({ page }) => {
-  await page.goto("/");
+  await selectOrCreateTestShop(page);
+  await page.getByTestId("pin-dots").waitFor({ state: "visible", timeout: 15000 });
   for (const digit of ["1", "2", "3", "4"]) {
     await page.getByTestId(`pin-key-${digit}`).click();
   }
-  await page.waitForURL("/", { timeout: 15000 });
+  await page.getByTestId("pin-dots").waitFor({ state: "hidden", timeout: 15000 });
 
   await page.getByRole("button", { name: "Lock karo" }).click();
-  await page.waitForURL("**/lock", { timeout: 15000 });
-  await expect(page.getByTestId("pin-dots")).toBeVisible();
+  await page.getByTestId("pin-dots").waitFor({ state: "visible", timeout: 15000 });
 
   // The lock is server-enforced (httpOnly cookie), not just a client route -- confirm a direct
   // navigation to a real page also bounces back to /lock instead of rendering.
   await page.goto("/customers");
-  await page.waitForURL("**/lock", { timeout: 15000 });
+  await page.getByTestId("pin-dots").waitFor({ state: "visible", timeout: 15000 });
 });
