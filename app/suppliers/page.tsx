@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AlertTriangle, Phone } from "lucide-react";
 import { createSupplier } from "@/backend/actions/actions";
 import { prisma } from "@/backend/lib/prisma";
+import { getCurrentShopId } from "@/backend/lib/shop-context";
 import { AddPersonPanel } from "@/frontend/components/add-person-panel";
 import { BalanceText } from "@/frontend/components/balance-text";
 import { Pagination } from "@/frontend/components/pagination";
@@ -18,9 +19,11 @@ type Props = {
 export default async function SuppliersPage({ searchParams }: Props) {
   const params = await searchParams;
   const page = Math.max(1, Number(params?.page) || 1);
+  const shopId = await getCurrentShopId();
 
   const [suppliers, total] = await Promise.all([
     prisma.supplier.findMany({
+      where: { shopId },
       include: {
         transactions: {
           where: {
@@ -33,7 +36,7 @@ export default async function SuppliersPage({ searchParams }: Props) {
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),
-    prisma.supplier.count(),
+    prisma.supplier.count({ where: { shopId } }),
   ]);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 

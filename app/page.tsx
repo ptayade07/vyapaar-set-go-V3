@@ -3,6 +3,7 @@ import { ChevronRight, Clock, IndianRupee, Plus, TrendingDown, TrendingUp, Truck
 import { computeOldestOpenUdhaarDate, daysBetweenNow } from "@/backend/lib/aging";
 import { formatTimeIst, getIstDayRange, getTodayInputValue } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
+import { getCurrentShopId } from "@/backend/lib/shop-context";
 import { Money } from "@/frontend/components/money";
 import { QuickEntry } from "@/frontend/components/quick-entry";
 import { T } from "@/frontend/components/t-text";
@@ -19,6 +20,7 @@ const AGING_BUCKETS = [
 export default async function DashboardPage() {
   const today = getTodayInputValue();
   const { start, end } = getIstDayRange(today);
+  const shopId = await getCurrentShopId();
   const [
     customers,
     suppliers,
@@ -29,34 +31,36 @@ export default async function DashboardPage() {
     debtors,
     todayReminders,
   ] = await Promise.all([
-    prisma.customer.findMany({ select: { id: true, name: true, phone: true, balancePaise: true } }),
-    prisma.supplier.findMany({ select: { balancePaise: true } }),
+    prisma.customer.findMany({ where: { shopId }, select: { id: true, name: true, phone: true, balancePaise: true } }),
+    prisma.supplier.findMany({ where: { shopId }, select: { balancePaise: true } }),
     prisma.customerTransaction.findMany({
-      where: { createdAt: { gte: start, lt: end } },
+      where: { shopId, createdAt: { gte: start, lt: end } },
       include: { customer: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
     }),
     prisma.supplierTransaction.findMany({
-      where: { createdAt: { gte: start, lt: end } },
+      where: { shopId, createdAt: { gte: start, lt: end } },
       include: { supplier: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
     }),
     prisma.customerTransaction.findMany({
+      where: { shopId },
       take: 10,
       include: { customer: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
     }),
     prisma.supplierTransaction.findMany({
+      where: { shopId },
       take: 10,
       include: { supplier: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
     }),
     prisma.customer.findMany({
-      where: { balancePaise: { gt: 0 } },
+      where: { shopId, balancePaise: { gt: 0 } },
       select: { transactions: { orderBy: { createdAt: "asc" }, select: { type: true, amountPaise: true, createdAt: true } } },
     }),
     prisma.note.findMany({
-      where: { done: false, reminderDate: { lte: end } },
+      where: { shopId, done: false, reminderDate: { lte: end } },
       orderBy: { reminderDate: "asc" },
     }),
   ]);

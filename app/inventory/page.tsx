@@ -3,11 +3,13 @@ import { InventoryItemCard } from "@/frontend/components/inventory-item-card";
 import { T } from "@/frontend/components/t-text";
 import { isLowStock } from "@/backend/lib/inventory";
 import { prisma } from "@/backend/lib/prisma";
+import { getCurrentShopId } from "@/backend/lib/shop-context";
 
 export const dynamic = "force-dynamic";
 
 export default async function InventoryPage() {
-  const items = await prisma.inventoryItem.findMany({ orderBy: { name: "asc" } });
+  const shopId = await getCurrentShopId();
+  const items = await prisma.inventoryItem.findMany({ where: { shopId }, orderBy: { name: "asc" } });
   const lowStockCount = items.filter((item) => isLowStock(item.quantity)).length;
 
   return (

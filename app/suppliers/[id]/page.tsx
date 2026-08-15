@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { addSupplierEntry } from "@/backend/actions/actions";
 import { formatDateIst, formatDateTimeIst } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
+import { getCurrentShopId } from "@/backend/lib/shop-context";
 import { Money } from "@/frontend/components/money";
 import { SupplierTxnPanel } from "@/frontend/components/supplier-txn-panel";
 import { T } from "@/frontend/components/t-text";
@@ -17,8 +18,9 @@ type Props = {
 
 export default async function SupplierDetailPage({ params }: Props) {
   const { id } = await params;
-  const supplier = await prisma.supplier.findUnique({
-    where: { id },
+  const shopId = await getCurrentShopId();
+  const supplier = await prisma.supplier.findFirst({
+    where: { id, shopId },
     include: {
       transactions: {
         orderBy: { createdAt: "asc" },

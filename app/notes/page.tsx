@@ -3,6 +3,7 @@ import { NoteRow } from "@/frontend/components/note-row";
 import { Pagination } from "@/frontend/components/pagination";
 import { T } from "@/frontend/components/t-text";
 import { prisma } from "@/backend/lib/prisma";
+import { getCurrentShopId } from "@/backend/lib/shop-context";
 
 export const dynamic = "force-dynamic";
 
@@ -15,16 +16,18 @@ type Props = {
 export default async function NotesPage({ searchParams }: Props) {
   const params = await searchParams;
   const page = Math.max(1, Number(params?.page) || 1);
+  const shopId = await getCurrentShopId();
 
   const [notes, total, customers] = await Promise.all([
     prisma.note.findMany({
+      where: { shopId },
       include: { customer: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),
-    prisma.note.count(),
-    prisma.customer.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.note.count({ where: { shopId } }),
+    prisma.customer.findMany({ where: { shopId }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 

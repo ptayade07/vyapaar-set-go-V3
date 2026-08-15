@@ -1,9 +1,9 @@
 import { renderToBuffer } from "@react-pdf/renderer";
 import { NextRequest, NextResponse } from "next/server";
-import { notFound } from "next/navigation";
 import { getCustomerBalanceDisplay } from "@/backend/lib/balance";
 import { formatDateTimeIst, formatMoneyPaise } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
+import { getCurrentShopId } from "@/backend/lib/shop-context";
 import { CustomerStatementDocument } from "@/backend/lib/statement-pdf";
 
 export const dynamic = "force-dynamic";
@@ -14,13 +14,18 @@ type Params = {
 
 export async function GET(_request: NextRequest, { params }: Params) {
   const { id } = await params;
-  const customer = await prisma.customer.findUnique({
-    where: { id },
+  const shopId = await getCurrentShopId();
+  // findFirst + shopId in the where clause, not findUnique-by-id-then-check: shop A hitting this
+  // URL with shop B's customer id gets a clean 404, never shop B's statement.
+  const customer = await prisma.customer.findFirst({
+    where: { id, shopId },
     include: { transactions: { orderBy: { createdAt: "asc" } } },
   });
 
   if (!customer) {
-    notFound();
+    // notFound() from next/navigation only works inside page renders, not Route Handlers -- it
+    // would otherwise throw and surface as an uncaught 500 here instead of a clean 404.
+    return new NextResponse("Customer not found.", { status: 404 });
   }
 
   const display = getCustomerBalanceDisplay(customer.balancePaise);

@@ -3,6 +3,7 @@ import { ArrowDownAZ, ArrowDownWideNarrow, Clock, Phone, Search, X } from "lucid
 import { createCustomer } from "@/backend/actions/actions";
 import { computeOldestOpenUdhaarDate, daysBetweenNow } from "@/backend/lib/aging";
 import { prisma } from "@/backend/lib/prisma";
+import { getCurrentShopId } from "@/backend/lib/shop-context";
 import { AddPersonPanel } from "@/frontend/components/add-person-panel";
 import { BalanceText } from "@/frontend/components/balance-text";
 import { Pagination } from "@/frontend/components/pagination";
@@ -35,15 +36,19 @@ export default async function CustomersPage({ searchParams }: Props) {
   const agingThreshold = params?.aging ? Number(params.aging) : null;
   const sortKey = params?.sort === "recent" || params?.sort === "az" ? params.sort : "udhaar";
   const page = Math.max(1, Number(params?.page) || 1);
+  const shopId = await getCurrentShopId();
 
-  const searchWhere: Prisma.CustomerWhereInput | undefined = query
-    ? {
-        OR: [
-          { name: { contains: query, mode: "insensitive" } },
-          { phone: { contains: query, mode: "insensitive" } },
-        ],
-      }
-    : undefined;
+  const searchWhere: Prisma.CustomerWhereInput = {
+    shopId,
+    ...(query
+      ? {
+          OR: [
+            { name: { contains: query, mode: "insensitive" } },
+            { phone: { contains: query, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
 
   function buildHref(nextPage: number) {
     const p = new URLSearchParams();

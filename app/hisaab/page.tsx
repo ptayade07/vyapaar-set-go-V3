@@ -6,6 +6,7 @@ import { T } from "@/frontend/components/t-text";
 import { getCustomerTransactionLabel } from "@/frontend/components/transaction-label";
 import { formatDateIst, formatDateTimeIst, getIstDayRange, getTodayInputValue } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
+import { getCurrentShopId } from "@/backend/lib/shop-context";
 
 export const dynamic = "force-dynamic";
 
@@ -17,17 +18,18 @@ export default async function HisaabPage({ searchParams }: Props) {
   const params = await searchParams;
   const selectedDate = params?.date || getTodayInputValue();
   const { start, end } = getIstDayRange(selectedDate);
+  const shopId = await getCurrentShopId();
   const [transactions, supplierPaymentsToday, openingCashRow] = await Promise.all([
     prisma.customerTransaction.findMany({
-      where: { createdAt: { gte: start, lt: end } },
+      where: { shopId, createdAt: { gte: start, lt: end } },
       include: { customer: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
     }),
     prisma.supplierTransaction.findMany({
-      where: { createdAt: { gte: start, lt: end }, type: "PAYMENT" },
+      where: { shopId, createdAt: { gte: start, lt: end }, type: "PAYMENT" },
       select: { amountPaise: true },
     }),
-    prisma.openingCash.findUnique({ where: { date: selectedDate } }),
+    prisma.openingCash.findUnique({ where: { shopId_date: { shopId, date: selectedDate } } }),
   ]);
   const udhaar = transactions
     .filter((transaction) => transaction.type === "UDHAAR")

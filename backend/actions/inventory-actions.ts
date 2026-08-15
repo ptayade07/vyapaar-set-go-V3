@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { parseAmountToPaise } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
+import { getCurrentShopId } from "@/backend/lib/shop-context";
 
 function parseQuantity(value: FormDataEntryValue | null) {
   const text = String(value ?? "").trim();
@@ -22,9 +23,11 @@ export async function createInventoryItem(formData: FormData) {
   if (!name) {
     throw new Error("Item name is required.");
   }
+  const shopId = await getCurrentShopId();
 
   await prisma.inventoryItem.create({
     data: {
+      shopId,
       name,
       quantity: parseQuantity(formData.get("quantity")),
       purchasePricePaise: parseAmountToPaise(formData.get("purchasePrice")),
@@ -41,9 +44,13 @@ export async function updateInventoryItem(itemId: string, formData: FormData) {
   if (!name) {
     throw new Error("Item name is required.");
   }
+  const shopId = await getCurrentShopId();
 
+  // Prisma's "extended where" lets a non-unique field (shopId) ride alongside the unique id on a
+  // singular update: it throws RecordNotFound if the item exists but belongs to another shop,
+  // rather than silently updating someone else's item.
   await prisma.inventoryItem.update({
-    where: { id: itemId },
+    where: { id: itemId, shopId },
     data: {
       name,
       purchasePricePaise: parseAmountToPaise(formData.get("purchasePrice")),
@@ -55,7 +62,8 @@ export async function updateInventoryItem(itemId: string, formData: FormData) {
 }
 
 export async function deleteInventoryItem(itemId: string) {
-  await prisma.inventoryItem.delete({ where: { id: itemId } });
+  const shopId = await getCurrentShopId();
+  await prisma.inventoryItem.delete({ where: { id: itemId, shopId } });
   revalidatePath("/inventory");
 }
 
@@ -63,6 +71,7 @@ export async function adjustInventoryQuantity(itemId: string, delta: number) {
   if (!Number.isInteger(delta) || delta === 0) {
     throw new Error("Quantity delta must be a non-zero whole number.");
   }
+  const shopId = await getCurrentShopId();
 
   // A read-then-write (SELECT then UPDATE) would race under concurrent taps: two overlapping
   // requests can both read the same starting quantity and one increment gets lost. A single
@@ -70,7 +79,7 @@ export async function adjustInventoryQuantity(itemId: string, delta: number) {
   const updated = await prisma.$executeRaw`
     UPDATE "InventoryItem"
     SET quantity = GREATEST(0, quantity + ${delta}), "updatedAt" = now()
-    WHERE id = ${itemId}
+    WHERE id = ${itemId} AND "shopId" = ${shopId}
   `;
 
   if (updated === 0) {

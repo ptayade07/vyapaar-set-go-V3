@@ -5,6 +5,7 @@ import { addCustomerEntry } from "@/backend/actions/actions";
 import { getCustomerBalanceDisplay } from "@/backend/lib/balance";
 import { formatDateTimeIst } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
+import { getCurrentShopId } from "@/backend/lib/shop-context";
 import { CustomerTxnButtons } from "@/frontend/components/customer-txn-buttons";
 import { DeleteTxnButton } from "@/frontend/components/delete-txn-button";
 import { Money } from "@/frontend/components/money";
@@ -27,8 +28,12 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
   const { id } = await params;
   const sp = await searchParams;
   const page = Math.max(1, Number(sp?.page) || 1);
+  const shopId = await getCurrentShopId();
 
-  const customer = await prisma.customer.findUnique({ where: { id } });
+  // This is an authorization boundary, not just a list filter: shopId is in the where clause
+  // (not checked after the fact) so a guessed customer id from another shop 404s here rather
+  // than ever rendering that customer's data.
+  const customer = await prisma.customer.findFirst({ where: { id, shopId } });
   if (!customer) {
     notFound();
   }
@@ -37,12 +42,12 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
   // rows already carries the correct running balance -- no need to load the full history.
   const [transactions, transactionCount] = await Promise.all([
     prisma.customerTransaction.findMany({
-      where: { customerId: id },
+      where: { customerId: id, shopId },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),
-    prisma.customerTransaction.count({ where: { customerId: id } }),
+    prisma.customerTransaction.count({ where: { customerId: id, shopId } }),
   ]);
   const totalPages = Math.max(1, Math.ceil(transactionCount / PAGE_SIZE));
 

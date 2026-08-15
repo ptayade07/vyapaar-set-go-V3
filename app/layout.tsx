@@ -1,8 +1,8 @@
-import { LogOut } from "lucide-react";
+import { LogOut, Store } from "lucide-react";
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Work_Sans } from "next/font/google";
 import Link from "next/link";
-import { lockAction } from "@/backend/actions/actions";
+import { lockAction, switchShopAction } from "@/backend/actions/actions";
 import { SidebarLangToggle, MobileLangToggle } from "@/frontend/components/lang-toggle";
 import { MobileNavLinks, SidebarNavLinks } from "@/frontend/components/nav-links";
 import { LangProvider } from "@/frontend/lib/i18n";
@@ -59,6 +59,15 @@ export default function RootLayout({
               </nav>
               <div className="space-y-2 border-t border-orange-100 p-3">
                 <SidebarLangToggle />
+                <form action={switchShopAction}>
+                  <button
+                    type="submit"
+                    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-600"
+                  >
+                    <Store className="h-4 w-4" />
+                    Shop badlo
+                  </button>
+                </form>
                 <form action={lockAction}>
                   <button
                     type="submit"

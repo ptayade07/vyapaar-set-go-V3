@@ -5,6 +5,7 @@ import { computeOldestOpenUdhaarDate, daysBetweenNow } from "@/backend/lib/aging
 import { formatDateIst, getIstDayRange, getTodayInputValue } from "@/backend/lib/format";
 import { isLowStock } from "@/backend/lib/inventory";
 import { prisma } from "@/backend/lib/prisma";
+import { getCurrentShopId } from "@/backend/lib/shop-context";
 
 export const dynamic = "force-dynamic";
 
@@ -14,14 +15,15 @@ export async function GET(request: NextRequest) {
   const dateParam = request.nextUrl.searchParams.get("date");
   const selectedDate = dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : getTodayInputValue();
   const { start, end } = getIstDayRange(selectedDate);
+  const shopId = await getCurrentShopId();
 
   const [dayTransactions, debtors, inventoryItems] = await Promise.all([
     prisma.customerTransaction.findMany({
-      where: { createdAt: { gte: start, lt: end } },
+      where: { shopId, createdAt: { gte: start, lt: end } },
       select: { type: true, amountPaise: true },
     }),
     prisma.customer.findMany({
-      where: { balancePaise: { gt: 0 } },
+      where: { shopId, balancePaise: { gt: 0 } },
       select: {
         name: true,
         balancePaise: true,
@@ -31,7 +33,7 @@ export async function GET(request: NextRequest) {
         },
       },
     }),
-    prisma.inventoryItem.findMany({ select: { name: true, quantity: true } }),
+    prisma.inventoryItem.findMany({ where: { shopId }, select: { name: true, quantity: true } }),
   ]);
 
   const udhaarTotalPaise = dayTransactions

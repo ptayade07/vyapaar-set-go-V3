@@ -3,6 +3,13 @@ import { applyCustomerEntry, applySupplierEntry } from "../lib/balance";
 
 const prisma = new PrismaClient();
 
+// This script only ever touches one dedicated demo shop, found-or-created by name -- never "any
+// shop with no data yet." That's the fix for the pre-multi-tenant version of this script, which
+// checked global row counts: a brand-new real shop signing up with zero customers would have
+// looked exactly like "needs seeding" and gotten a pile of fake demo data. See PRODUCTION_STAGES.md
+// Stage 1, step 8.
+const DEMO_SHOP_NAME = "Demo Shop";
+
 type CustomerSeed = {
   name: string;
   phone?: string;
@@ -139,31 +146,36 @@ const suppliers: SupplierSeed[] = [
 ];
 
 async function main() {
+  const shop =
+    (await prisma.shop.findFirst({ where: { name: DEMO_SHOP_NAME } })) ??
+    (await prisma.shop.create({ data: { name: DEMO_SHOP_NAME } }));
+
   const [customerCount, supplierCount, inventoryCount] = await Promise.all([
-    prisma.customer.count(),
-    prisma.supplier.count(),
-    prisma.inventoryItem.count(),
+    prisma.customer.count({ where: { shopId: shop.id } }),
+    prisma.supplier.count({ where: { shopId: shop.id } }),
+    prisma.inventoryItem.count({ where: { shopId: shop.id } }),
   ]);
 
   if (customerCount > 0 || supplierCount > 0) {
-    console.log("Khata seed skipped: database already has demo records.");
+    console.log(`Khata seed skipped: "${DEMO_SHOP_NAME}" already has demo records.`);
   } else {
-    await seedKhata();
+    await seedKhata(shop.id);
   }
 
   if (inventoryCount > 0) {
-    console.log("Inventory seed skipped: items already exist.");
+    console.log(`Inventory seed skipped: "${DEMO_SHOP_NAME}" already has items.`);
   } else {
-    await prisma.inventoryItem.createMany({ data: inventoryItems });
+    await prisma.inventoryItem.createMany({ data: inventoryItems.map((item) => ({ ...item, shopId: shop.id })) });
     console.log("Seed complete: demo inventory is ready.");
   }
 }
 
-async function seedKhata() {
+async function seedKhata(shopId: string) {
   for (const customerSeed of customers) {
     let balancePaise = 0;
     const customer = await prisma.customer.create({
       data: {
+        shopId,
         name: customerSeed.name,
         phone: customerSeed.phone,
         note: customerSeed.note,
@@ -174,6 +186,7 @@ async function seedKhata() {
       balancePaise = applyCustomerEntry(balancePaise, entry.type, entry.amountPaise);
       await prisma.customerTransaction.create({
         data: {
+          shopId,
           customerId: customer.id,
           type: entry.type,
           amountPaise: entry.amountPaise,
@@ -194,6 +207,7 @@ async function seedKhata() {
     let balancePaise = 0;
     const supplier = await prisma.supplier.create({
       data: {
+        shopId,
         name: supplierSeed.name,
         phone: supplierSeed.phone,
         note: supplierSeed.note,
@@ -204,6 +218,7 @@ async function seedKhata() {
       balancePaise = applySupplierEntry(balancePaise, entry.type, entry.amountPaise);
       await prisma.supplierTransaction.create({
         data: {
+          shopId,
           supplierId: supplier.id,
           type: entry.type,
           amountPaise: entry.amountPaise,

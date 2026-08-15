@@ -9,32 +9,49 @@ import { applyCustomerEntry, applySupplierEntry } from "@/backend/lib/balance";
 import { optionalText, parseAmountToPaise } from "@/backend/lib/format";
 import { verifyPin } from "@/backend/lib/pin";
 import { prisma } from "@/backend/lib/prisma";
+import { getCurrentShopId, SHOP_COOKIE } from "@/backend/lib/shop-context";
 
 const UNLOCK_COOKIE = "vsg_unlocked";
 
 export async function verifyPinAction(pin: string): Promise<boolean> {
-  const correct = await verifyPin(pin);
+  const shopId = await getCurrentShopId();
+  const correct = await verifyPin(shopId, pin);
   if (correct) {
     const cookieStore = await cookies();
-    cookieStore.set(UNLOCK_COOKIE, "1", { httpOnly: true, sameSite: "lax", path: "/" });
+    cookieStore.set(UNLOCK_COOKIE, "1", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+    });
   }
   return correct;
 }
 
+/** Locks the current shop's session but stays on the same shop -- the PIN screen for that same
+ * shop reappears rather than forcing a re-pick. See switchShopAction for actually changing shops. */
 export async function lockAction() {
   const cookieStore = await cookies();
   cookieStore.delete(UNLOCK_COOKIE);
   redirect("/lock");
 }
 
+export async function switchShopAction() {
+  const cookieStore = await cookies();
+  cookieStore.delete(UNLOCK_COOKIE);
+  cookieStore.delete(SHOP_COOKIE);
+  redirect("/select-shop");
+}
+
 export async function setOpeningCash(date: string, amountPaise: number) {
   if (!Number.isInteger(amountPaise) || amountPaise < 0) {
     throw new Error("Opening cash must be zero or a positive whole paise value.");
   }
+  const shopId = await getCurrentShopId();
 
   await prisma.openingCash.upsert({
-    where: { date },
-    create: { date, amountPaise },
+    where: { shopId_date: { shopId, date } },
+    create: { shopId, date, amountPaise },
     update: { amountPaise },
   });
 
@@ -47,9 +64,11 @@ export async function createCustomer(formData: FormData) {
   if (!name) {
     throw new Error("Customer name is required.");
   }
+  const shopId = await getCurrentShopId();
 
   const customer = await prisma.customer.create({
     data: {
+      shopId,
       name,
       phone: optionalText(formData.get("phone")),
       note: optionalText(formData.get("note")),
@@ -70,10 +89,14 @@ export async function addCustomerEntry(customerId: string, formData: FormData) {
   if (!["UDHAAR", "PAYMENT", "ADVANCE"].includes(type)) {
     throw new Error("Invalid customer transaction type.");
   }
+  const shopId = await getCurrentShopId();
 
   await prisma.$transaction(async (tx) => {
-    const customer = await tx.customer.findUniqueOrThrow({
-      where: { id: customerId },
+    // findFirstOrThrow with shopId in the where clause, not findUnique-by-id-then-check: this is
+    // the authorization boundary that stops shop A from posting an entry against shop B's
+    // customer id even if they somehow get hold of it.
+    const customer = await tx.customer.findFirstOrThrow({
+      where: { id: customerId, shopId },
       select: { balancePaise: true },
     });
     const balanceAfterPaise = applyCustomerEntry(customer.balancePaise, type, amountPaise);
@@ -84,6 +107,7 @@ export async function addCustomerEntry(customerId: string, formData: FormData) {
     });
     await tx.customerTransaction.create({
       data: {
+        shopId,
         customerId,
         type,
         amountPaise,
@@ -100,7 +124,13 @@ export async function addCustomerEntry(customerId: string, formData: FormData) {
 }
 
 export async function deleteCustomerTransaction(customerId: string, transactionId: string) {
+  const shopId = await getCurrentShopId();
+
   await prisma.$transaction(async (tx) => {
+    // Ownership check up front -- everything else in this function only ever touches rows
+    // scoped by customerId, so this one check covers the whole transaction.
+    await tx.customer.findFirstOrThrow({ where: { id: customerId, shopId }, select: { id: true } });
+
     const transactions = await tx.customerTransaction.findMany({
       where: { customerId },
       orderBy: { createdAt: "asc" },
@@ -163,9 +193,11 @@ export async function createSupplier(formData: FormData) {
   if (!name) {
     throw new Error("Supplier name is required.");
   }
+  const shopId = await getCurrentShopId();
 
   const supplier = await prisma.supplier.create({
     data: {
+      shopId,
       name,
       phone: optionalText(formData.get("phone")),
       note: optionalText(formData.get("note")),
@@ -186,10 +218,11 @@ export async function addSupplierEntry(supplierId: string, formData: FormData) {
   if (!["CREDIT", "PAYMENT"].includes(type)) {
     throw new Error("Invalid supplier transaction type.");
   }
+  const shopId = await getCurrentShopId();
 
   await prisma.$transaction(async (tx) => {
-    const supplier = await tx.supplier.findUniqueOrThrow({
-      where: { id: supplierId },
+    const supplier = await tx.supplier.findFirstOrThrow({
+      where: { id: supplierId, shopId },
       select: { balancePaise: true },
     });
     const balanceAfterPaise = applySupplierEntry(supplier.balancePaise, type, amountPaise);
@@ -200,6 +233,7 @@ export async function addSupplierEntry(supplierId: string, formData: FormData) {
     });
     await tx.supplierTransaction.create({
       data: {
+        shopId,
         supplierId,
         type,
         amountPaise,
