@@ -4,12 +4,15 @@ import { verifySessionToken } from "@/backend/lib/session";
 const UNLOCK_COOKIE = "vsg_unlocked";
 const SESSION_COOKIE = "vsg_session";
 
+// Reachable with no session at all: signing in, signing up, and the legal pages signup links to.
+const PUBLIC_PATHS = new Set(["/login", "/signup", "/terms", "/privacy"]);
+
 // Order matters: log in first, then unlock *that* shop's PIN as a device-lock layer on top. The
 // PIN is per-shop (see backend/lib/pin.ts), so there's no PIN to check until a session is known.
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname === "/login") {
+  if (PUBLIC_PATHS.has(pathname)) {
     return NextResponse.next();
   }
 
