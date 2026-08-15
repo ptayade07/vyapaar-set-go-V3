@@ -49,6 +49,17 @@ model User {
   @@index([shopId])
 }
 
+// A pilot-scale rate limit for the public signup form (Stage 3), not real abuse infrastructure --
+// see PRODUCTION_STAGES.md. ipHash is a hash of the caller's IP, not the raw address, so this
+// table doesn't become a second place raw IPs are stored.
+model SignupAttempt {
+  id        String   @id @default(cuid())
+  ipHash    String
+  createdAt DateTime @default(now())
+
+  @@index([ipHash, createdAt])
+}
+
 model Customer {
   id           String                @id @default(cuid())
   shopId       String
