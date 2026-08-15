@@ -10,9 +10,9 @@ about to start them, per `PLANS.md`'s own convention of planning before building
 - **Stage 1 — Multi-tenant foundation.** ✅ **Done.** No user-facing change. Every table gets a
   `shopId`, every query gets scoped, the auto-seed landmine gets defused. Everything else depends
   on this being right.
-- **Stage 2 — Real auth + private pilot.** Real login replaces the shared PIN as the source of
-  identity (PIN stays as a device-lock layer on top). Shops created by hand, not self-serve.
-  2–5 real shopkeepers using it.
+- **Stage 2 — Real auth + private pilot.** ✅ **Done.** Real login replaces the shared PIN as the
+  source of identity (PIN stays as a device-lock layer on top). Shops created by hand, not
+  self-serve. 2–5 real shopkeepers using it.
 - **Stage 3 — Public self-serve signup.** Anyone can create a shop. Terms of Service and Privacy
   Policy must be live before this opens.
 - **Stage 4 — Per-shop completeness.** Shop settings (name/address/phone/logo) feeding PDF
@@ -106,6 +106,15 @@ cross-contamination anywhere in the app.
 ---
 
 ## Stage 2: Real auth + private pilot — detailed steps
+
+**Status: ✅ Complete.** All 10 steps below are done. Final verification: `npm run typecheck`
+clean, 39/39 unit tests pass, all 11 e2e specs pass (including the new `login.spec.ts` and the
+rewritten `tenant-isolation.spec.ts`), and a manual walkthrough confirmed real login → PIN → real
+"My Shop" data, `/select-shop` genuinely gone (404, not just redirected), and logout actually
+ending the session (direct URL nav afterward bounces to `/login`, server-enforced). One thing worth
+knowing, not a bug: on Neon's free tier a cold pooled connection can occasionally make the very
+first PIN-verify or login request take longer than 15s — already documented in the README's Neon
+section; real usage after the first request is fast.
 
 **Goal:** the `/select-shop` picker (a stand-in with zero security — anyone who reaches it can
 create a shop or open any existing one) is replaced by real email+password login. Shops are still
