@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { loginAction } from "@/backend/actions/auth-actions";
@@ -74,6 +75,13 @@ export default function LoginPage() {
           >
             {isPending ? "Login ho raha hai…" : "Login karo"}
           </button>
+
+          <p className="text-center text-sm text-gray-500">
+            Naya shop? — New shop?{" "}
+            <Link href="/signup" className="font-semibold text-orange-700">
+              Sign up karo
+            </Link>
+          </p>
         </form>
       </div>
     </div>
