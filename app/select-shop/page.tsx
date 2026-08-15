@@ -7,8 +7,8 @@ export default async function SelectShopPage() {
   const shops = await prisma.shop.findMany({ orderBy: { createdAt: "asc" } });
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-[var(--background)] px-4">
-      <div className="w-full max-w-sm space-y-6">
+    <div className="min-h-screen overflow-y-auto bg-[var(--background)] px-4 py-10">
+      <div className="mx-auto w-full max-w-sm space-y-6">
         <div className="text-center">
           <span className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-600 text-2xl font-bold text-white">
             व
