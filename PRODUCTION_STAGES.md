@@ -7,9 +7,9 @@ we're about to start them, per `PLANS.md`'s own convention of planning before bu
 
 ## Overview
 
-- **Stage 1 — Multi-tenant foundation.** No user-facing change. Every table gets a `shopId`, every
-  query gets scoped, the auto-seed landmine gets defused. Everything else depends on this being
-  right.
+- **Stage 1 — Multi-tenant foundation.** ✅ **Done.** No user-facing change. Every table gets a
+  `shopId`, every query gets scoped, the auto-seed landmine gets defused. Everything else depends
+  on this being right.
 - **Stage 2 — Real auth + private pilot.** Real login replaces the shared PIN as the source of
   identity (PIN stays as a device-lock layer on top). Shops created by hand, not self-serve.
   2–5 real shopkeepers using it.
@@ -24,6 +24,13 @@ we're about to start them, per `PLANS.md`'s own convention of planning before bu
 ---
 
 ## Stage 1: Multi-tenant foundation — detailed steps
+
+**Status: ✅ Complete.** All 10 steps below are done. Two real bugs were caught and fixed along the
+way (not just by the plan, but by actually running the isolation test against the app): the
+`/select-shop` picker was unreachable past a handful of shops (`fixed inset-0` with no scroll), and
+the app was missing an `app/not-found.tsx` boundary. Final verification: all 9 e2e specs pass
+(including the new `tenant-isolation.spec.ts`), `npm run typecheck` is clean, and 39/39 unit tests
+pass.
 
 **Goal:** every row in the database belongs to exactly one shop, every query is scoped to the
 current shop, and it's provable that one shop can never see another's data. No login UI yet —
