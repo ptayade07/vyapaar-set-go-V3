@@ -2,7 +2,7 @@
 
 This is the staged plan for turning the app from a single-shop tool into a product multiple
 shopkeepers can sign up for. Each stage should ship and be usable on its own before the next one
-starts. Stages 1 and 2 are broken down step-by-step; the rest get the same treatment when we're
+starts. Stages 1, 2, and 3 are broken down step-by-step; the rest get the same treatment when we're
 about to start them, per `PLANS.md`'s own convention of planning before building.
 
 ## Overview
@@ -217,3 +217,82 @@ cookie) instead of pulling in an auth framework like Auth.js/NextAuth. Two reaso
 **Definition of done:** steps 1–9 complete, the rewritten test suite passes end to end, and the
 current user can personally log into their real "My Shop" data with a real email+password from a
 fresh browser, with the PIN lock still working on top, and log out cleanly.
+
+---
+
+## Stage 3: Public self-serve signup — detailed steps
+
+**Goal:** anyone can create their own shop account without the current user hand-creating it via
+`create-pilot-user.ts`. Terms of Service and Privacy Policy are live and linked *before* the
+signup form is reachable, per this stage's own requirement in the Overview.
+
+### Decisions made while planning (documented here, not re-asked mid-implementation)
+
+- **ToS/Privacy are drafted here as simple, plain-language starter versions**, with a clear "not
+  reviewed by a lawyer" disclaimer — honest with early public users, appropriate for a small pilot.
+  These are **not** a substitute for real legal review; swap in lawyer-reviewed versions before
+  charging money or growing past pilot scale.
+- **Email verification is skipped this stage**, consistent with Stage 2's own deferral of
+  email-based flows until an email-sending service exists for another reason anyway.
+- **A lightweight signup rate limit is added now**, since this is the first fully public write
+  endpoint the app has ever had (everything before this required a hand-created login). A new
+  `SignupAttempt { id, ipHash, createdAt }` table, checked and written inside `signupAction`: read
+  the caller's IP via `headers()` (`x-forwarded-for`, the header Vercel sets), hash it, count
+  attempts from that hash in the last hour, reject with a friendly message past a small cap (5/hr).
+  This is a pilot-scale mitigation, not real abuse infrastructure — revisit in Stage 5 if it's not
+  enough.
+
+### Two things found while planning this that aren't obvious from the current code
+
+- Login's `loginAction` deliberately never reveals whether an email is registered (so a failed
+  attempt can't be used to enumerate accounts). **Signup is the opposite on purpose**: telling
+  someone "this email is already registered" during *signup* is normal, expected UX, not a
+  security leak — the person typing it already knows whether it's their own email.
+- Stage 2's own goal statement said "shops created by hand, not self-serve" — this stage literally
+  reverses that. `create-pilot-user.ts` isn't removed (still useful for support / admin-assisted
+  onboarding), but it stops being the *only* way a shop gets created.
+
+### Steps
+
+1. **`/terms` and `/privacy` pages.**
+   Plain-language static pages describing what data the app stores (shop, customer, and supplier
+   names/phone numbers, transaction amounts), that it's strictly shop-scoped (see Stage 1's
+   tenant-isolation guarantees), who to contact with questions, and the "not reviewed by a lawyer"
+   disclaimer. Publicly reachable, no login required.
+
+2. **`proxy.ts`: allow the new public routes through.**
+   Add `/signup`, `/terms`, `/privacy` to the no-session allow-list, same treatment `/login`
+   already gets.
+
+3. **Schema: `SignupAttempt` for rate limiting.**
+   Add the model described above. `npm run prisma:push`.
+
+4. **`backend/actions/auth-actions.ts`: `signupAction(email, password, shopName)`.**
+   Validate password length (reuse the 8-char minimum from `create-pilot-user.ts`), check the
+   rate limit (step 3) and reject early if tripped, check email uniqueness and return a specific
+   "already registered" error if taken (see the documented exception to login's secrecy rule
+   above), otherwise create the `Shop` + `User` (bcrypt hash), sign a session token, set the
+   cookie, and redirect to `/` — same shape as `loginAction`, but creating instead of verifying.
+
+5. **`/signup` page.**
+   Email + password + shop name form, styled like `/login`. A required "I agree to the Terms and
+   Privacy Policy" checkbox linking to the new pages — submit is disabled until it's checked.
+   Inline error display reuses `/login`'s client pattern (`useTransition`, no raw form action).
+
+6. **Cross-link `/login` and `/signup`.**
+   "New shop? Sign up" on `/login`; "Already have an account? Log in" on `/signup`.
+
+7. **e2e test: `signup.spec.ts`.**
+   Successful signup lands on the PIN screen with a genuinely empty new shop (no demo data, no
+   other shop's data). Signing up again with the same email shows the specific "already
+   registered" error. Submit is blocked until the ToS checkbox is checked.
+
+8. **Full verification pass.**
+   `npm run typecheck`, `npm test`, `npm run test:e2e` all green. Manual walkthrough: sign up as a
+   brand-new user with zero prior involvement in the project, confirm the shop starts genuinely
+   empty, confirm `/terms` and `/privacy` load and are linked from `/signup`, confirm the rate
+   limit trips after enough rapid signups in one run and recovers after the window passes.
+
+**Definition of done:** ToS/Privacy are live and linked from the signup form, self-serve signup
+works end to end and is rate-limited, and the full test suite (existing + new `signup.spec.ts`)
+passes.
