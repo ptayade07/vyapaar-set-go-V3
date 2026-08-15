@@ -3,7 +3,7 @@ import { InventoryItemCard } from "@/frontend/components/inventory-item-card";
 import { T } from "@/frontend/components/t-text";
 import { isLowStock } from "@/backend/lib/inventory";
 import { prisma } from "@/backend/lib/prisma";
-import { getCurrentShopId } from "@/backend/lib/shop-context";
+import { getCurrentShopId } from "@/backend/lib/auth";
 
 export const dynamic = "force-dynamic";
 

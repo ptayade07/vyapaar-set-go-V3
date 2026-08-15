@@ -3,7 +3,7 @@ import { NoteRow } from "@/frontend/components/note-row";
 import { Pagination } from "@/frontend/components/pagination";
 import { T } from "@/frontend/components/t-text";
 import { prisma } from "@/backend/lib/prisma";
-import { getCurrentShopId } from "@/backend/lib/shop-context";
+import { getCurrentShopId } from "@/backend/lib/auth";
 
 export const dynamic = "force-dynamic";
 

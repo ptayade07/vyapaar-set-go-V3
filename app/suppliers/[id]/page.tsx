@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { addSupplierEntry } from "@/backend/actions/actions";
 import { formatDateIst, formatDateTimeIst } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
-import { getCurrentShopId } from "@/backend/lib/shop-context";
+import { getCurrentShopId } from "@/backend/lib/auth";
 import { Money } from "@/frontend/components/money";
 import { SupplierTxnPanel } from "@/frontend/components/supplier-txn-panel";
 import { T } from "@/frontend/components/t-text";

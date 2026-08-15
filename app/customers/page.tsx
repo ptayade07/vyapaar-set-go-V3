@@ -3,7 +3,7 @@ import { ArrowDownAZ, ArrowDownWideNarrow, Clock, Phone, Search, X } from "lucid
 import { createCustomer } from "@/backend/actions/actions";
 import { computeOldestOpenUdhaarDate, daysBetweenNow } from "@/backend/lib/aging";
 import { prisma } from "@/backend/lib/prisma";
-import { getCurrentShopId } from "@/backend/lib/shop-context";
+import { getCurrentShopId } from "@/backend/lib/auth";
 import { AddPersonPanel } from "@/frontend/components/add-person-panel";
 import { BalanceText } from "@/frontend/components/balance-text";
 import { Pagination } from "@/frontend/components/pagination";

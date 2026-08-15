@@ -3,7 +3,7 @@ import { ChevronRight, Clock, IndianRupee, Plus, TrendingDown, TrendingUp, Truck
 import { computeOldestOpenUdhaarDate, daysBetweenNow } from "@/backend/lib/aging";
 import { formatTimeIst, getIstDayRange, getTodayInputValue } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
-import { getCurrentShopId } from "@/backend/lib/shop-context";
+import { getCurrentShopId } from "@/backend/lib/auth";
 import { Money } from "@/frontend/components/money";
 import { QuickEntry } from "@/frontend/components/quick-entry";
 import { T } from "@/frontend/components/t-text";

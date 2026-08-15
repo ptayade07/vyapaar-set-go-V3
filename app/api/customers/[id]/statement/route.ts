@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCustomerBalanceDisplay } from "@/backend/lib/balance";
 import { formatDateTimeIst, formatMoneyPaise } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
-import { getCurrentShopId } from "@/backend/lib/shop-context";
+import { getCurrentShopId } from "@/backend/lib/auth";
 import { CustomerStatementDocument } from "@/backend/lib/statement-pdf";
 
 export const dynamic = "force-dynamic";

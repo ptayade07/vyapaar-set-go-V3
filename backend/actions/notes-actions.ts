@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { optionalText } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
-import { getCurrentShopId } from "@/backend/lib/shop-context";
+import { getCurrentShopId } from "@/backend/lib/auth";
 
 export async function createNote(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();

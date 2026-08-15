@@ -9,7 +9,7 @@ import { applyCustomerEntry, applySupplierEntry } from "@/backend/lib/balance";
 import { optionalText, parseAmountToPaise } from "@/backend/lib/format";
 import { verifyPin } from "@/backend/lib/pin";
 import { prisma } from "@/backend/lib/prisma";
-import { getCurrentShopId, SHOP_COOKIE } from "@/backend/lib/shop-context";
+import { getCurrentShopId } from "@/backend/lib/auth";
 
 const UNLOCK_COOKIE = "vsg_unlocked";
 
@@ -28,19 +28,12 @@ export async function verifyPinAction(pin: string): Promise<boolean> {
   return correct;
 }
 
-/** Locks the current shop's session but stays on the same shop -- the PIN screen for that same
- * shop reappears rather than forcing a re-pick. See switchShopAction for actually changing shops. */
+/** Locks the current shop's session but stays logged in -- the PIN screen reappears rather than
+ * forcing a re-login. See logoutAction (auth-actions.ts) for actually signing out. */
 export async function lockAction() {
   const cookieStore = await cookies();
   cookieStore.delete(UNLOCK_COOKIE);
   redirect("/lock");
-}
-
-export async function switchShopAction() {
-  const cookieStore = await cookies();
-  cookieStore.delete(UNLOCK_COOKIE);
-  cookieStore.delete(SHOP_COOKIE);
-  redirect("/select-shop");
 }
 
 export async function setOpeningCash(date: string, amountPaise: number) {

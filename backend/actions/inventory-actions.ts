@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { parseAmountToPaise } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
-import { getCurrentShopId } from "@/backend/lib/shop-context";
+import { getCurrentShopId } from "@/backend/lib/auth";
 
 function parseQuantity(value: FormDataEntryValue | null) {
   const text = String(value ?? "").trim();

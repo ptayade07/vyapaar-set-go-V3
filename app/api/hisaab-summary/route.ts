@@ -5,7 +5,7 @@ import { computeOldestOpenUdhaarDate, daysBetweenNow } from "@/backend/lib/aging
 import { formatDateIst, getIstDayRange, getTodayInputValue } from "@/backend/lib/format";
 import { isLowStock } from "@/backend/lib/inventory";
 import { prisma } from "@/backend/lib/prisma";
-import { getCurrentShopId } from "@/backend/lib/shop-context";
+import { getCurrentShopId } from "@/backend/lib/auth";
 
 export const dynamic = "force-dynamic";
 

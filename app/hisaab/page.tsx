@@ -6,7 +6,7 @@ import { T } from "@/frontend/components/t-text";
 import { getCustomerTransactionLabel } from "@/frontend/components/transaction-label";
 import { formatDateIst, formatDateTimeIst, getIstDayRange, getTodayInputValue } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
-import { getCurrentShopId } from "@/backend/lib/shop-context";
+import { getCurrentShopId } from "@/backend/lib/auth";
 
 export const dynamic = "force-dynamic";
 

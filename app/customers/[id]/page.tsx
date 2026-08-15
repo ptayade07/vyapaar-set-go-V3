@@ -5,7 +5,7 @@ import { addCustomerEntry } from "@/backend/actions/actions";
 import { getCustomerBalanceDisplay } from "@/backend/lib/balance";
 import { formatDateTimeIst } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
-import { getCurrentShopId } from "@/backend/lib/shop-context";
+import { getCurrentShopId } from "@/backend/lib/auth";
 import { CustomerTxnButtons } from "@/frontend/components/customer-txn-buttons";
 import { DeleteTxnButton } from "@/frontend/components/delete-txn-button";
 import { Money } from "@/frontend/components/money";
