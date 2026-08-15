@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { selectOrCreateTestShop } from "./utils";
+import { loginAsTestUser } from "./utils";
 
 test("wrong PIN shows an error and resets, correct PIN still unlocks after", async ({ page }) => {
-  await selectOrCreateTestShop(page);
+  await loginAsTestUser(page);
   await page.getByTestId("pin-dots").waitFor({ state: "visible", timeout: 15000 });
 
   for (const digit of ["9", "9", "9", "9"]) {
@@ -20,7 +20,7 @@ test("wrong PIN shows an error and resets, correct PIN still unlocks after", asy
 });
 
 test("lock button returns to the PIN screen", async ({ page }) => {
-  await selectOrCreateTestShop(page);
+  await loginAsTestUser(page);
   await page.getByTestId("pin-dots").waitFor({ state: "visible", timeout: 15000 });
   for (const digit of ["1", "2", "3", "4"]) {
     await page.getByTestId(`pin-key-${digit}`).click();

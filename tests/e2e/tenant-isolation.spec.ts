@@ -1,14 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
+import { loginAsTestUser } from "./utils";
 
-async function createShopAndUnlock(page: Page, shopName: string) {
-  await page.goto("/select-shop");
-  await page.getByPlaceholder("e.g. Ramesh Kirana").fill(shopName);
-  await page.getByRole("button", { name: "Create & use this shop" }).click();
-  // A brand-new shop is never pre-unlocked -- proxy.ts bounces to /lock next, and a fresh shop's
-  // PIN always defaults to 1234 (see backend/lib/pin.ts). Checking for the PIN keypad rather than
-  // the URL: a Server Action redirect() followed through the client router's RSC transition
-  // renders /lock's content correctly here but doesn't update the address bar to match -- a
-  // cosmetic quirk, not a gating bug, so the test asserts on what's actually rendered.
+async function loginAndUnlock(page: Page, email: string, shopName: string) {
+  await loginAsTestUser(page, { email, password: "isolation-test-password-1234", shopName });
+  // A Server Action redirect() followed via the client router's RSC transition renders /lock's
+  // content correctly but doesn't reliably update the address bar to match -- a cosmetic quirk,
+  // not a gating bug, so the test asserts on what's actually rendered.
   await page.getByTestId("pin-dots").waitFor({ state: "visible", timeout: 15000 });
   for (const digit of ["1", "2", "3", "4"]) {
     await page.getByTestId(`pin-key-${digit}`).click();
@@ -38,7 +35,7 @@ async function addInventoryItem(page: Page, name: string) {
 // of "two different shopkeepers on two different devices," and it means each gets its own cookie
 // jar for free rather than needing to fake that.
 test("two shops never see, list, or reach each other's data", async ({ browser }) => {
-  // This test drives two full "shopkeepers" end to end (create shop, unlock, create records,
+  // This test drives two full "shopkeepers" end to end (log in, unlock, create records,
   // cross-check) -- meaningfully more sequential round-trips than the other specs.
   test.setTimeout(150000);
 
@@ -49,6 +46,8 @@ test("two shops never see, list, or reach each other's data", async ({ browser }
 
   try {
     const stamp = Date.now();
+    const emailA = `isolation-a-${stamp}@vyapaarsetgo.test`;
+    const emailB = `isolation-b-${stamp}@vyapaarsetgo.test`;
     const shopAName = `Isolation Shop A ${stamp}`;
     const shopBName = `Isolation Shop B ${stamp}`;
     const customerAName = `Customer A ${stamp}`;
@@ -56,8 +55,8 @@ test("two shops never see, list, or reach each other's data", async ({ browser }
     const itemAName = `Item A ${stamp}`;
     const itemBName = `Item B ${stamp}`;
 
-    await createShopAndUnlock(pageA, shopAName);
-    await createShopAndUnlock(pageB, shopBName);
+    await loginAndUnlock(pageA, emailA, shopAName);
+    await loginAndUnlock(pageB, emailB, shopBName);
 
     await addCustomer(pageA, customerAName);
     const customerAUrl = pageA.url();
