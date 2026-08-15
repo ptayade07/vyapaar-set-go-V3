@@ -13,7 +13,8 @@
     "test:e2e": "playwright test",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "seed": "prisma db seed"
+    "seed": "prisma db seed",
+    "create-pilot-user": "tsx backend/prisma/create-pilot-user.ts"
   },
   "dependencies": {
     "@prisma/client": "6.19.3",
