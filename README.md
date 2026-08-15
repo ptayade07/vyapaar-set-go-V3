@@ -7,9 +7,12 @@
   Hisaab page — the app works fully without it, using a deterministic template for the summary
   instead.
 - One free Postgres connection string is required for deploy and local persistence. Neon is the documented default and has a no-card free tier.
-- The app opens behind a 4-digit PIN lock (default `1234`, changeable only by editing the
-  `AppSetting` row directly for now). This is a single shared household-device lock, not per-user
-  login.
+- `AUTH_SECRET` is required — it signs the login session cookie. Generate one with
+  `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` and put it in `.env`.
+- The app is multi-tenant: every shopkeeper logs in with a real email + password
+  (`backend/lib/auth.ts`), then unlocks a 4-digit PIN (default `1234`) as a quick per-device lock
+  on top — see `PRODUCTION_STAGES.md`'s Stage 2. Shops aren't self-serve yet: create one by hand
+  with `npm run create-pilot-user -- "Shop Name" owner@example.com "a password"`.
 - `BLOB_READ_WRITE_TOKEN` is optional. Set it (a Vercel Blob store token) to enable receipt-photo
   attachments on customer transactions — without it, the photo-attach control is simply hidden and
   everything else works normally.
@@ -21,20 +24,24 @@ Vyapaar Set Go is a mobile-first digital khata and shop hisaab app for small Ind
 - Amounts are stored as integer paise in Postgres to avoid floating-point money errors.
 - Customer balances use one signed value: positive is `Udhaar`, negative is `Advance`, zero is `Settled`.
 - Supplier balances are from the shopkeeper's view: positive means `Dena hai`.
-- Demo mode is single-shop and no-login for hackathon speed.
-- Seed data runs only when both customer and supplier tables are empty.
+- Multi-tenant: every row belongs to exactly one shop, and every login maps to exactly one shop
+  (`PRODUCTION_STAGES.md`, Stages 1–2).
+- Seed data (`npm run seed`) only ever touches one dedicated "Demo Shop," found-or-created by name
+  — never any real shop, so a brand-new pilot shop always starts genuinely empty.
 
 ## Run Locally
 
 ```bash
 npm install
 cp .env.example .env
+# fill in DATABASE_URL and AUTH_SECRET in .env (see Prerequisites above)
 npm run prisma:push
 npm run seed
+npm run create-pilot-user -- "My Shop" you@example.com "a password"
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:3000` and log in with the email/password you just created.
 
 ## Validation Commands
 
@@ -83,7 +90,7 @@ on Neon's paid tier.
 
 1. Push this repo to GitHub.
 2. In Vercel, import the repo and keep the framework as Next.js.
-3. Add `DATABASE_URL` in Vercel Project Settings → Environment Variables.
+3. Add `DATABASE_URL` and `AUTH_SECRET` in Vercel Project Settings → Environment Variables.
 4. Set the build command to `npm run vercel-build`.
 5. Deploy. The build runs `prisma db push`, `prisma db seed`, and `next build`.
 
@@ -110,7 +117,9 @@ npm run seed
 
 ## Screens
 
-- Lock: 4-digit PIN keypad gating every other screen (session cookie, default PIN `1234`).
+- Login: email + password, gating every other screen (see Prerequisites above).
+- Lock: 4-digit PIN keypad, a quick per-device unlock layered on top of login (session cookie,
+  default PIN `1234`).
 - Dashboard: summary cards, a "Kal kya bacha?" aging card (7/15/30-day overdue-customer buckets),
   a Quick Entry bar (customer autocomplete + Udhaar/Payment + amount), today's due reminders,
   recent transactions, and quick actions.
