@@ -2,8 +2,8 @@
 
 This is the staged plan for turning the app from a single-shop tool into a product multiple
 shopkeepers can sign up for. Each stage should ship and be usable on its own before the next one
-starts. Only Stage 1 is broken down step-by-step right now — the rest get the same treatment when
-we're about to start them, per `PLANS.md`'s own convention of planning before building.
+starts. Stages 1 and 2 are broken down step-by-step; the rest get the same treatment when we're
+about to start them, per `PLANS.md`'s own convention of planning before building.
 
 ## Overview
 
@@ -102,3 +102,109 @@ Stage 2 builds real auth on top of the plumbing this stage creates.
 **Definition of done:** steps 1–8 complete, the new isolation tests pass, the existing test suite
 (`npm test`, `npm run test:e2e`) still passes, and the manual two-shop walkthrough shows zero
 cross-contamination anywhere in the app.
+
+---
+
+## Stage 2: Real auth + private pilot — detailed steps
+
+**Goal:** the `/select-shop` picker (a stand-in with zero security — anyone who reaches it can
+create a shop or open any existing one) is replaced by real email+password login. Shops are still
+created by hand for 2–5 real shopkeepers, not self-serve — that's Stage 3. The PIN keypad stays
+exactly as it is today, now sitting *on top of* login as a quick per-device unlock, not as the
+identity check itself.
+
+**Auth method: email + password**, decided with the user — no passwords to store client-side ever,
+no new third-party service required to *start* the pilot (email-based password reset can come
+later, once a Stage 3/4 email service exists anyway).
+
+### Two things found while planning this that aren't obvious from the current code
+
+- Everything Stage 1 built as an explicitly-labeled "temporary picker until real login exists" —
+  `app/select-shop/`, `backend/actions/shop-actions.ts`, the `vsg_shop` cookie, the "Shop badlo"
+  button in `layout.tsx` — gets **removed**, not extended, this stage. Stage 2 is as much deletion
+  as addition.
+- Every e2e spec's login helper (`tests/e2e/utils.ts`'s `unlockPin`/`selectOrCreateTestShop`,
+  `tenant-isolation.spec.ts`'s shop-creation flow, `pin-lock.spec.ts`) currently authenticates by
+  picking a shop from a list. All of it has to be rewritten to log in with email+password —
+  comparable in size to Stage 1's own steps 9–10.
+
+### Decision made while planning (documented here rather than re-asked)
+
+Session handling is **hand-rolled** (`bcryptjs` for password hashing + `jose` for a signed session
+cookie) instead of pulling in an auth framework like Auth.js/NextAuth. Two reasons:
+
+1. It matches the pattern the app already uses successfully for the PIN lock — a server-verified,
+   signed, httpOnly cookie, nothing trusted from the client — rather than running two different
+   auth paradigms side by side.
+2. This app runs on a very new Next.js 16.x. A full auth framework is meaningfully more dependency
+   surface that could clash with that; `jose` (the same JWT primitive Auth.js itself uses
+   internally) is small, stable, and already Edge-runtime-safe, which `proxy.ts` needs.
+
+### Steps
+
+1. **Schema: add `User`.**
+   In `backend/prisma/schema.prisma`: add `model User { id, email (unique), passwordHash, shopId
+   (FK to Shop), createdAt }`. Add `bcryptjs` and `jose` as dependencies. `npm run prisma:push`.
+   `shopId` is a plain FK, not unique — one shop having multiple staff logins later doesn't need a
+   migration — but Stage 2 only ever creates one `User` per `Shop` by hand.
+
+2. **`backend/lib/session.ts` — sign/verify a session token.**
+   `createSessionToken({ userId, shopId })` signs a short JWT via `jose`, keyed off a new required
+   `AUTH_SECRET` env var. `verifySessionToken(token)` verifies and decodes it. No Prisma import in
+   this file — it has to run inside `proxy.ts`'s Edge runtime, same constraint that shaped
+   `shop-context.ts` in Stage 1.
+
+3. **`backend/lib/auth.ts` — replace `getCurrentShopId()`.**
+   Rewritten to read a new `vsg_session` cookie, verify it via `verifySessionToken`, and return
+   `shopId` (redirecting to `/login` if missing/invalid). This fully replaces
+   `backend/lib/shop-context.ts`; every page/route that currently imports `getCurrentShopId` from
+   there switches to the new module — no call-site logic changes, just the source of truth
+   underneath it.
+
+4. **`backend/actions/auth-actions.ts` — login and logout.**
+   `loginAction(email, password)`: look up `User` by email, `bcryptjs.compare` against
+   `passwordHash`, sign a session token on success, set it as an httpOnly/`sameSite: lax`/`secure`-
+   in-production cookie, redirect to `/`. On failure, one generic error ("Email ya password galat"
+   / "Incorrect email or password") — never reveal whether the email exists. `logoutAction()`:
+   clears both `vsg_session` and `vsg_unlocked`, redirects to `/login`.
+
+5. **`app/login/page.tsx`.**
+   Email + password form styled with the same tactile-card language as `/lock`'s keypad screen,
+   calling `loginAction`. Simple, no "remember me" or social login — this is a hand-picked pilot.
+
+6. **`proxy.ts` — swap the gate.**
+   Replace the `vsg_shop` cookie-presence check with a `vsg_session` JWT verification (still
+   Edge-safe via `jose`, no DB call). Keep the existing `vsg_unlocked` PIN check as the second gate,
+   in the same order as today: not logged in → `/login`; logged in but not PIN-unlocked → `/lock`;
+   both → through. This is the "PIN as a device-lock layer on top of login" behavior from the
+   Stage 2 goal.
+
+7. **Retire the Stage 1 picker scaffolding.**
+   Delete `app/select-shop/`, `backend/actions/shop-actions.ts`, and `backend/lib/shop-context.ts`
+   (fully superseded by step 3). Remove the "Shop badlo" button and `switchShopAction` from
+   `app/layout.tsx`; add a real "Log out" button calling `logoutAction`. There's no shop-switching
+   concept left once one login maps to exactly one shop.
+
+8. **One-off admin script: create a pilot user.**
+   `backend/prisma/create-pilot-user.ts` — given a shop name, email, and password, creates the
+   `Shop` and its one `User` (hashed) in a single call. This is the entire "shops created by hand"
+   mechanism for Stage 2 — a script, not an admin UI, on purpose (see the "two dashboards" question
+   from earlier: we don't yet know what an admin screen needs to do, so we're not building one until
+   real pilot usage tells us). Run it once for each of the 2–5 real shopkeepers, and once for the
+   existing "My Shop" row so the current data has a real login instead of the old picker.
+
+9. **Rewrite every e2e test's login flow.**
+   `tests/e2e/utils.ts`, `tests/e2e/tenant-isolation.spec.ts`, `tests/e2e/pin-lock.spec.ts` all swap
+   "pick or create a shop" for "log in as a seeded test user." `tenant-isolation.spec.ts` seeds two
+   `Shop`+`User` pairs directly via Prisma in a test setup helper (mirroring `create-pilot-user.ts`)
+   instead of driving the old picker UI, then logs each browser context in with its own credentials.
+
+10. **Full verification pass.**
+    `npm run typecheck`, `npm test`, `npm run test:e2e` all green. Manual walkthrough: log in as two
+    different pilot users in two separate browser profiles, confirm PIN lock still gates each one
+    independently, confirm logging out actually ends the session (a direct URL navigation afterward
+    bounces to `/login`, not just the button click), confirm `/select-shop` no longer exists (404).
+
+**Definition of done:** steps 1–9 complete, the rewritten test suite passes end to end, and the
+current user can personally log into their real "My Shop" data with a real email+password from a
+fresh browser, with the PIN lock still working on top, and log out cleanly.
