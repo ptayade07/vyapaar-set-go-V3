@@ -8,17 +8,18 @@ type Props = {
   name: string;
   phone: string | null;
   balancePaise: number;
+  shopName: string;
+  shopPhone: string | null;
 };
 
-export function ReminderButton({ name, phone, balancePaise }: Props) {
+export function ReminderButton({ name, phone, balancePaise, shopName, shopPhone }: Props) {
   const [copied, setCopied] = useState(false);
-  const message = useMemo(
-    () =>
-      `Namaste ${name} ji 🙏\nAapka udhaar ${formatMoneyPaise(
-        balancePaise,
-      )} pending hai. Kripya jald payment karein.\nDhanyavaad!`,
-    [name, balancePaise],
-  );
+  const message = useMemo(() => {
+    const signOff = shopPhone ? `${shopName} (${shopPhone})` : shopName;
+    return `Namaste ${name} ji 🙏\nAapka udhaar ${formatMoneyPaise(
+      balancePaise,
+    )} pending hai. Kripya jald payment karein.\nDhanyavaad!\n- ${signOff}`;
+  }, [name, balancePaise, shopName, shopPhone]);
 
   if (balancePaise <= 0) {
     return null;

@@ -38,6 +38,10 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
     notFound();
   }
 
+  // Signs off the WhatsApp/copy reminder with the shopkeeper's own identity instead of leaving it
+  // anonymous -- see PRODUCTION_STAGES.md, Stage 4.
+  const shop = await prisma.shop.findUniqueOrThrow({ where: { id: shopId }, select: { name: true, phone: true } });
+
   // balanceAfterPaise is snapshotted per row at write time, so a single page of newest-first
   // rows already carries the correct running balance -- no need to load the full history.
   const [transactions, transactionCount] = await Promise.all([
@@ -88,7 +92,13 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
         </div>
 
         <div className="mt-5 flex flex-wrap gap-3 border-t border-gray-100 pt-5">
-          <ReminderButton name={customer.name} phone={customer.phone} balancePaise={customer.balancePaise} />
+          <ReminderButton
+            name={customer.name}
+            phone={customer.phone}
+            balancePaise={customer.balancePaise}
+            shopName={shop.name}
+            shopPhone={shop.phone}
+          />
           <a
             href={`/api/customers/${customer.id}/statement`}
             target="_blank"
