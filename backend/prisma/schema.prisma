@@ -21,6 +21,9 @@ enum SupplierTransactionType {
 model Shop {
   id        String   @id @default(cuid())
   name      String
+  address   String?
+  phone     String?
+  logoUrl   String?
   createdAt DateTime @default(now())
 
   users       User[]
