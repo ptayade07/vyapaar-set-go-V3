@@ -13,8 +13,8 @@ about to start them, per `PLANS.md`'s own convention of planning before building
 - **Stage 2 — Real auth + private pilot.** ✅ **Done.** Real login replaces the shared PIN as the
   source of identity (PIN stays as a device-lock layer on top). Shops created by hand, not
   self-serve. 2–5 real shopkeepers using it.
-- **Stage 3 — Public self-serve signup.** Anyone can create a shop. Terms of Service and Privacy
-  Policy must be live before this opens.
+- **Stage 3 — Public self-serve signup.** ✅ **Done.** Anyone can create a shop. Terms of Service
+  and Privacy Policy must be live before this opens.
 - **Stage 4 — Per-shop completeness.** Shop settings (name/address/phone/logo) feeding PDF
   statements and reminders, plus whatever Stage 2 pilot feedback surfaced.
 - **Stage 5 — Operational hardening.** Error tracking, admin tooling, infra scaling review, data
@@ -221,6 +221,14 @@ fresh browser, with the PIN lock still working on top, and log out cleanly.
 ---
 
 ## Stage 3: Public self-serve signup — detailed steps
+
+**Status: ✅ Complete.** All 8 steps below are done. Final verification: `npm run typecheck`
+clean, 39/39 unit tests pass, all 14 e2e specs pass (including the new `signup.spec.ts`), and a
+manual walkthrough confirmed: a brand-new signup lands on the PIN screen with a genuinely empty
+shop; `/terms` and `/privacy` are live and linked from `/signup`'s HTML; the rate limit actually
+blocks the 6th signup attempt from the same caller within an hour (verified directly against the
+database — no new `Shop` or `SignupAttempt` row on the blocked attempt) and, being a sliding
+time-window check, recovers on its own with no separate reset logic needed.
 
 **Goal:** anyone can create their own shop account without the current user hand-creating it via
 `create-pilot-user.ts`. Terms of Service and Privacy Policy are live and linked *before* the
