@@ -15,3 +15,11 @@ export async function verifyPin(shopId: string, candidate: string): Promise<bool
   const pin = await getPin(shopId);
   return candidate === pin;
 }
+
+export async function setPin(shopId: string, newPin: string): Promise<void> {
+  await prisma.appSetting.upsert({
+    where: { shopId_key: { shopId, key: PIN_KEY } },
+    create: { shopId, key: PIN_KEY, value: newPin },
+    update: { value: newPin },
+  });
+}
