@@ -1,4 +1,4 @@
-import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 
 export type StatementRow = {
   date: string;
@@ -8,8 +8,32 @@ export type StatementRow = {
   balanceText: string;
 };
 
-export type StatementProps = {
+// The shop-fields part of StatementProps, pulled out on purpose: this is the thing Stage 4 wired
+// up (see PRODUCTION_STAGES.md), and unit-testing this small pure mapping is the reliable way to
+// verify a shop's real identity reaches the PDF -- parsing the generated PDF bytes back out isn't,
+// since @react-pdf/renderer's output is typically compressed inside the PDF structure.
+export type ShopStatementFields = {
   shopName: string;
+  shopAddress: string | null;
+  shopPhone: string | null;
+  shopLogoUrl: string | null;
+};
+
+export function buildShopStatementFields(shop: {
+  name: string;
+  address: string | null;
+  phone: string | null;
+  logoUrl: string | null;
+}): ShopStatementFields {
+  return {
+    shopName: shop.name,
+    shopAddress: shop.address,
+    shopPhone: shop.phone,
+    shopLogoUrl: shop.logoUrl,
+  };
+}
+
+export type StatementProps = ShopStatementFields & {
   customerName: string;
   customerPhone: string | null;
   balanceLabel: string;
@@ -27,7 +51,10 @@ const TONE_COLOR: Record<StatementProps["balanceTone"], string> = {
 
 const styles = StyleSheet.create({
   page: { padding: 32, fontSize: 10, color: "#1F2937", fontFamily: "Helvetica" },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  logo: { width: 40, height: 40, borderRadius: 4 },
   shopName: { fontSize: 18, fontWeight: 700, color: "#B8460E" },
+  shopContact: { fontSize: 8.5, color: "#6B7280", marginTop: 2 },
   meta: { fontSize: 9, color: "#6B7280", marginTop: 2 },
   divider: { height: 1.2, backgroundColor: "#B8460E", marginVertical: 12 },
   customerCard: {
@@ -64,8 +91,15 @@ export function CustomerStatementDocument(props: StatementProps) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <Text style={styles.shopName}>{props.shopName}</Text>
-        <Text style={styles.meta}>Statement generated {props.generatedAt}</Text>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.shopName}>{props.shopName}</Text>
+            {props.shopAddress ? <Text style={styles.shopContact}>{props.shopAddress}</Text> : null}
+            {props.shopPhone ? <Text style={styles.shopContact}>{props.shopPhone}</Text> : null}
+            <Text style={styles.meta}>Statement generated {props.generatedAt}</Text>
+          </View>
+          {props.shopLogoUrl ? <Image src={props.shopLogoUrl} style={styles.logo} /> : null}
+        </View>
 
         <View style={styles.divider} />
 

@@ -4,7 +4,7 @@ import { getCustomerBalanceDisplay } from "@/backend/lib/balance";
 import { formatDateTimeIst, formatMoneyPaise } from "@/backend/lib/format";
 import { prisma } from "@/backend/lib/prisma";
 import { getCurrentShopId } from "@/backend/lib/auth";
-import { CustomerStatementDocument } from "@/backend/lib/statement-pdf";
+import { buildShopStatementFields, CustomerStatementDocument } from "@/backend/lib/statement-pdf";
 
 export const dynamic = "force-dynamic";
 
@@ -28,10 +28,11 @@ export async function GET(_request: NextRequest, { params }: Params) {
     return new NextResponse("Customer not found.", { status: 404 });
   }
 
+  const shop = await prisma.shop.findUniqueOrThrow({ where: { id: shopId } });
   const display = getCustomerBalanceDisplay(customer.balancePaise);
   const buffer = await renderToBuffer(
     CustomerStatementDocument({
-      shopName: "Vyapaar Set Go",
+      ...buildShopStatementFields(shop),
       customerName: customer.name,
       customerPhone: customer.phone,
       balanceLabel: display.label,
