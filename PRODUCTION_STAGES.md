@@ -2,8 +2,8 @@
 
 This is the staged plan for turning the app from a single-shop tool into a product multiple
 shopkeepers can sign up for. Each stage should ship and be usable on its own before the next one
-starts. Stages 1, 2, and 3 are broken down step-by-step; the rest get the same treatment when we're
-about to start them, per `PLANS.md`'s own convention of planning before building.
+starts. Stages 1-4 are broken down step-by-step; the rest get the same treatment when we're about
+to start them, per `PLANS.md`'s own convention of planning before building.
 
 ## Overview
 
@@ -304,3 +304,99 @@ signup form is reachable, per this stage's own requirement in the Overview.
 **Definition of done:** ToS/Privacy are live and linked from the signup form, self-serve signup
 works end to end and is rate-limited, and the full test suite (existing + new `signup.spec.ts`)
 passes.
+
+---
+
+## Stage 4: Per-shop completeness — detailed steps
+
+**Goal:** every shop can complete its own identity (name, address, phone, logo) and see that
+identity reflected in the documents/messages it sends to *its own* customers — the PDF statement
+and the WhatsApp reminder — instead of those showing the app's own product name. Also closes a
+small, adjacent, real gap: there is currently no way to change the PIN from a default of `1234`
+without a direct database edit.
+
+The "plus whatever Stage 2 pilot feedback surfaced" half of this stage's one-line description in
+the Overview is **explicitly deferred, not addressed here** — there's no real pilot feedback yet
+(confirmed with the user). This stage only covers the concrete, already-known part. A second pass
+at Stage 4 (or a new stage) may be worth doing once real shopkeepers have actually used the app for
+a while.
+
+### Two things found while planning this that aren't obvious from the current code
+
+- `app/api/customers/[id]/statement/route.ts` hardcodes `shopName: "Vyapaar Set Go"` when building
+  every PDF statement — literally every shop's statement currently shows the *product's* name, not
+  the shopkeeper's own business name. This isn't a nice-to-have; it's the concrete bug this stage
+  fixes.
+- There is genuinely no user-facing way to change the PIN today (the README still only documents
+  the `1234` default). Not named in the stage's one-line description, but it's a real, near-free
+  addition once a shop settings screen exists anyway — bundled in here rather than left out just
+  because the one-liner didn't spell it out.
+
+### Decisions made while planning (documented here, not re-asked mid-implementation)
+
+- **Logo storage reuses `@vercel/blob`**, already integrated for receipt-photo attachments, rather
+  than adding a new dependency — same fail-closed posture: if `BLOB_READ_WRITE_TOKEN` isn't set,
+  the logo upload control is simply hidden, exactly like the existing photo-attach control.
+- **The app's own product branding (sidebar "व Vyapaar Set Go") stays constant** regardless of
+  which shop is logged in — that's the SaaS's identity, not the shopkeeper's. Shop settings
+  (address/phone/logo) are specifically the shopkeeper's *own* business identity, used only where a
+  document goes to *their* customer (PDF, WhatsApp) — the two are kept deliberately separate.
+- **PDF-content correctness is tested at the data layer, not by parsing generated PDF bytes.**
+  `@react-pdf/renderer` output is typically compressed inside the PDF structure, so naive
+  string-matching against downloaded PDF bytes for the shop's name/address is unreliable. Instead,
+  the shop-fields → `StatementProps` mapping gets pulled out into its own small, pure, testable
+  function.
+
+### Steps
+
+1. **Schema: add `address`, `phone`, `logoUrl` to `Shop`.**
+   All optional strings. `npm run prisma:push`.
+
+2. **`backend/actions/shop-settings-actions.ts`.**
+   `updateShopSettings(formData)` — scoped by `getCurrentShopId()`, updates name/address/phone.
+   `uploadShopLogo(formData)` — mirrors `uploadTransactionPhoto`'s fail-closed Blob pattern from
+   `backend/actions/actions.ts` (same MIME-type allowlist, a smaller 2MB cap since it's a logo, not
+   a receipt). `changePinAction(currentPin, newPin)` — verifies the *current* PIN via the existing
+   `verifyPin` before allowing a change, so this isn't "type any 4 digits and take over."
+
+3. **`/settings` page.**
+   A form for name/address/phone; logo upload with preview, hidden entirely when Blob isn't
+   configured (same posture as the existing photo-attach control); a separate "Change PIN" card
+   (current PIN + new PIN + confirm). Add a "Settings" link to the sidebar and mobile nav.
+
+4. **Wire shop identity into the PDF statement.**
+   Extract the shop-fields → `StatementProps` mapping (currently inline in
+   `app/api/customers/[id]/statement/route.ts`) into a small pure function so it's unit-testable
+   without rendering or parsing PDF bytes. The route now fetches the current shop's own
+   name/address/phone/logoUrl (scoped by `getCurrentShopId()`, same pattern already used there) and
+   passes them through instead of the hardcoded string. `backend/lib/statement-pdf.tsx` renders the
+   address/phone under the shop name, and the logo via `@react-pdf/renderer`'s `<Image>` when
+   `logoUrl` is set, gracefully omitted when it isn't.
+
+5. **Wire shop identity into the WhatsApp reminder.**
+   `frontend/components/reminder-button.tsx` accepts the shop's name (and phone, as a callback
+   number) as new props, and signs off the copy/WhatsApp message with them instead of leaving it
+   anonymous. Threaded through from `app/customers/[id]/page.tsx`, which needs one more scoped
+   `prisma.shop.findUnique` alongside its existing `getCurrentShopId()` call.
+
+6. **Unit test: the PDF prop-assembly function.**
+   Vitest case confirming a shop's real name/address/phone/logoUrl correctly become the
+   `StatementProps` passed to `CustomerStatementDocument` — testing the data assembly directly
+   rather than parsing generated PDF bytes, per the documented decision above.
+
+7. **e2e test: `shop-settings.spec.ts`.**
+   Update name/address/phone via the settings form and confirm the values persist (form re-renders
+   with what was saved). The statement route still returns a valid PDF (200, correct
+   `Content-Type`) once the shop has settings populated. Changing the PIN with the wrong *current*
+   PIN fails with an error; changing it with the correct current PIN succeeds, and logging back in
+   afterward requires the *new* PIN, not the old default.
+
+8. **Full verification pass.**
+   `npm run typecheck`, `npm test`, `npm run test:e2e` all green. Manual walkthrough: fill in real
+   address/phone/logo for "My Shop," download a statement and visually confirm it reflects the
+   change, send a WhatsApp reminder and confirm the sign-off, change the PIN and confirm the new one
+   (not `1234`) is what's required on the next lock screen.
+
+**Definition of done:** every shop can complete address/phone/logo, PDF statements and WhatsApp
+reminders reflect the shop's own identity instead of the app's, the PIN is changeable from the UI,
+and the full test suite (existing + new `shop-settings.spec.ts` + the new unit test) passes.
