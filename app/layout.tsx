@@ -1,4 +1,4 @@
-import { Lock, LogOut } from "lucide-react";
+import { Lock, LogOut, Settings } from "lucide-react";
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Work_Sans } from "next/font/google";
 import Link from "next/link";
@@ -60,6 +60,13 @@ export default function RootLayout({
               </nav>
               <div className="space-y-2 border-t border-orange-100 p-3">
                 <SidebarLangToggle />
+                <Link
+                  href="/settings"
+                  className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-600"
+                >
+                  <Settings className="h-4 w-4" />
+                  Settings
+                </Link>
                 <form action={lockAction}>
                   <button
                     type="submit"
@@ -91,7 +98,16 @@ export default function RootLayout({
                   </span>
                   <span className="font-bold text-gray-900">Vyapaar Set Go</span>
                 </Link>
-                <MobileLangToggle />
+                <div className="flex items-center gap-1">
+                  <MobileLangToggle />
+                  <Link
+                    href="/settings"
+                    aria-label="Settings"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-orange-50 hover:text-orange-700"
+                  >
+                    <Settings className="h-5 w-5" />
+                  </Link>
+                </div>
               </div>
 
               <main className="flex-1 px-4 py-6 pb-24 sm:px-8 md:pb-8">{children}</main>
