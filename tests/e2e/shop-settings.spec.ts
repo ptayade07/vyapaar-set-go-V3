@@ -32,8 +32,15 @@ test("update shop settings, PDF still downloads, and PIN can be changed", async 
   await page.getByLabel("Shop naam").fill(updatedName);
   await page.getByLabel("Address (optional)").fill("221B Baker Street, Pune");
   await page.getByLabel("Phone (optional)").fill("9998887770");
-  await page.getByRole("button", { name: "Save karo" }).click();
-  await page.waitForLoadState("networkidle");
+  // The settings form is a plain <form action={serverAction}> with uncontrolled inputs
+  // (defaultValue, not value) -- there's no client-side pending state to wait on, and
+  // waitForLoadState("networkidle") isn't a reliable signal for exactly when the Server Action's
+  // own POST (and the prisma.shop.update inside it) has actually completed. Wait for that POST's
+  // response directly instead, so the reload below can't race ahead of the write.
+  await Promise.all([
+    page.waitForResponse((response) => response.request().method() === "POST" && response.url().includes("/settings")),
+    page.getByRole("button", { name: "Save karo" }).click(),
+  ]);
 
   await page.reload();
   await expect(page.getByLabel("Shop naam")).toHaveValue(updatedName);
