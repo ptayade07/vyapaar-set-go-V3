@@ -10,7 +10,12 @@ async function unlockWithPin(page: import("@playwright/test").Page, digits: stri
 }
 
 test("update shop settings, PDF still downloads, and PIN can be changed", async ({ page }) => {
-  test.setTimeout(60000);
+  // This test chains an unusually long sequence of real round-trips (login+unlock, two settings
+  // saves each with a reload, customer creation, a PDF fetch, two PIN-change attempts, a lock, and
+  // two more unlock attempts) -- the default 60s budget is tight for that chain specifically, not
+  // for anything the app itself is doing slowly. Same reasoning as tenant-isolation.spec.ts's
+  // extended timeout.
+  test.setTimeout(120000);
 
   // A dedicated shop, not the shared fixed test user -- this test changes the PIN, which would
   // break every other spec relying on the shared shop's default 1234.
@@ -69,6 +74,10 @@ test("update shop settings, PDF still downloads, and PIN can be changed", async 
     await page.getByTestId(`pin-key-${digit}`).click();
   }
   await expect(page.getByTestId("pin-error")).toBeVisible({ timeout: 15000 });
+  // Dots reset to empty after the ~800ms error flash -- entering the next PIN before that reset
+  // lands can silently drop digits (pressKey no-ops while the stale 4-digit entry still fills the
+  // field), same race pin-lock.spec.ts already accounts for.
+  await expect(page.getByTestId("pin-dot-0")).not.toHaveClass(/bg-orange-600/, { timeout: 5000 });
 
   await unlockWithPin(page, ["5", "6", "7", "8"]);
 });
