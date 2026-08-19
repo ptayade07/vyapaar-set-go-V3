@@ -15,7 +15,8 @@ to start them, per `PLANS.md`'s own convention of planning before building.
   self-serve. 2–5 real shopkeepers using it.
 - **Stage 3 — Public self-serve signup.** ✅ **Done.** Anyone can create a shop. Terms of Service
   and Privacy Policy must be live before this opens.
-- **Stage 4 — Per-shop completeness.** Shop settings (name/address/phone/logo) feeding PDF
+- **Stage 4 — Per-shop completeness.** ✅ **Done** (the concrete part — see below; the
+  pilot-feedback half is explicitly deferred). Shop settings (name/address/phone/logo) feeding PDF
   statements and reminders, plus whatever Stage 2 pilot feedback surfaced.
 - **Stage 5 — Operational hardening.** Error tracking, admin tooling, infra scaling review, data
   export/backup.
@@ -308,6 +309,17 @@ passes.
 ---
 
 ## Stage 4: Per-shop completeness — detailed steps
+
+**Status: ✅ Complete** (concrete part). All 8 steps below are done. Final verification:
+`npm run typecheck` clean, 41/41 unit tests pass (new `statement-pdf.test.ts`), all 15 e2e specs
+pass (new `shop-settings.spec.ts`) after fixing a real race condition the test itself had — entering
+a new PIN immediately after a deliberate wrong-PIN attempt, before the ~800ms error-reset animation
+actually cleared the field, silently dropped digits. Manual walkthrough on the real "My Shop"
+account: updated address/phone, confirmed the downloaded PDF statement visually renders them under
+the shop name, confirmed the copied WhatsApp reminder signs off with "- My Shop", and confirmed the
+logo upload control is genuinely absent (fail-closed) with no `BLOB_READ_WRITE_TOKEN` configured.
+The PIN-change flow itself was verified via the automated test only, deliberately not exercised on
+the real account, to avoid silently changing the current user's actual login PIN.
 
 **Goal:** every shop can complete its own identity (name, address, phone, logo) and see that
 identity reflected in the documents/messages it sends to *its own* customers — the PDF statement
