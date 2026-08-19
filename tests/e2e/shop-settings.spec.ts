@@ -52,7 +52,11 @@ test("update shop settings, PDF still downloads, and PIN can be changed", async 
   await page.getByRole("button", { name: "Naya Grahak" }).click();
   await page.getByPlaceholder("Naam (required)").fill(`Statement Test Customer ${stamp}`);
   await page.getByRole("button", { name: "Save karo" }).click();
-  await page.waitForLoadState("networkidle");
+  // createCustomer redirects to the new customer's detail page -- wait for that URL to actually
+  // land before reading it. networkidle alone isn't enough: it can resolve while the client-side
+  // navigation from the redirect is still in flight, leaving page.url() on the stale /customers
+  // list and turning "customers" itself into a bogus id (same race class already fixed above).
+  await page.waitForURL(/\/customers\/\w+$/, { timeout: 15000 });
   const customerId = page.url().split("/").pop();
 
   const statementResponse = await page.request.get(`/api/customers/${customerId}/statement`);

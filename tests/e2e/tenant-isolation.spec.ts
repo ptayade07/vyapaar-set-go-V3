@@ -18,6 +18,12 @@ async function addCustomer(page: Page, name: string) {
   await page.getByRole("button", { name: "Naya Grahak" }).click();
   await page.getByPlaceholder("Naam (required)").fill(name);
   await page.getByRole("button", { name: "Save karo" }).click();
+  // createCustomer redirects to the new customer's detail page -- wait for that URL to actually
+  // land before anything reads it. networkidle alone can resolve while the client-side navigation
+  // from the redirect is still in flight, leaving page.url() on the stale /customers list --
+  // "customers" itself would then become a bogus id that happens to 404 too, silently passing the
+  // cross-tenant check below for the wrong reason instead of the real one.
+  await page.waitForURL(/\/customers\/\w+$/, { timeout: 15000 });
   await page.waitForLoadState("networkidle");
 }
 
