@@ -412,3 +412,49 @@ a while.
 **Definition of done:** every shop can complete address/phone/logo, PDF statements and WhatsApp
 reminders reflect the shop's own identity instead of the app's, the PIN is changeable from the UI,
 and the full test suite (existing + new `shop-settings.spec.ts` + the new unit test) passes.
+
+---
+
+## Post-Stage-4: two security gaps closed (login rate limiting, password reset)
+
+**Status: ✅ Complete.** The app went live on Vercel after Stage 4, which surfaced two real gaps
+identified in conversation but not covered by any stage above: `loginAction` had no rate limiting
+(only `signupAction` did), and there was no self-service password reset at all.
+
+- **Login rate limiting.** `loginAction` now rate limits per caller IP (5/hour), counting only
+  *failed* attempts — a legitimate shopkeeper logging in and out several times shouldn't ever brush
+  against this. Refactored the IP-hashing and counting/recording logic out of `signupAction` into
+  `backend/lib/rate-limit.ts` so both (and the new password-reset request action) share one
+  implementation instead of three copies. `loginAction`'s return type changed from a plain boolean
+  to `{ ok: true } | { ok: false; error: "INVALID_CREDENTIALS" | "RATE_LIMITED" }`, matching
+  `signupAction`'s shape, so `/login` can show a distinct "too many attempts" message.
+- **Password reset.** New `PasswordResetToken` (stores a token *hash*, never the raw value, same
+  reasoning as `passwordHash`) and `PasswordResetAttempt` (its own rate-limit budget, separate from
+  login/signup) tables. `requestPasswordResetAction` always returns success regardless of whether
+  the email is registered (same anti-enumeration principle as login), and only sends an email when
+  it is. `resetPasswordAction` collapses "no such token" and "expired" into one result — telling an
+  attacker holding a bad token which one it is would leak information. New `/forgot-password` and
+  `/reset-password` pages. Sends via Resend (`backend/lib/email.ts`), decided with the user: no
+  domain exists yet, so it runs in Resend's sandbox mode — the whole mechanism (token generation,
+  the reset page, the actual password change) is fully built and correct, but real emails can only
+  reach the Resend account's own inbox until a domain is verified. No further code changes will be
+  needed when that happens — just swap `FROM_ADDRESS` in `email.ts`.
+
+**Two things found while doing this:**
+- A rate-limit test that deliberately exhausts its own budget (to prove the limit is reachable)
+  will poison every other test that shares its IP bucket in the same local run — `signupAttempt`
+  already had this risk from Stage 3, but `loginAttempt` was much worse: almost every other spec
+  needs to log in to do anything. Fixed by clearing the table in a `finally` block at the end of
+  that one test. Purely a local-testing artifact; real users have real, distinct IPs.
+- The raw password-reset token only ever exists in the emailed link and briefly in memory — by
+  design, it's never recoverable from the database (only its hash is stored). Verifying the flow
+  locally (no `RESEND_API_KEY` configured yet) needed a temporary console.log of the URL, removed
+  before committing (confirmed via `git diff`); the permanent automated test
+  (`password-reset.spec.ts`) instead inserts a known token directly via Prisma, bypassing email
+  entirely, which is also a legitimate way to test the *consumption* side without needing a real
+  email service.
+
+Verified: `npm run typecheck` clean, 41/41 unit tests, all 20 e2e specs pass (4 new in
+`password-reset.spec.ts`, 1 new in `login.spec.ts`). Manually confirmed against the real dev
+server: reset request → token created → reset via the real page → old password rejected → new
+password works → reused token rejected → bogus token rejected.
