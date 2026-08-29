@@ -5,23 +5,28 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { loginAction } from "@/backend/actions/auth-actions";
 
+const ERROR_MESSAGES: Record<string, string> = {
+  INVALID_CREDENTIALS: "Email ya password galat — Incorrect email or password",
+  RATE_LIMITED: "Bahut zyada koshish ho gayi, thodi der baad try karo — Too many attempts, try again later",
+};
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setError(false);
+    setError(null);
     startTransition(async () => {
-      const ok = await loginAction(email, password);
-      if (ok) {
+      const result = await loginAction(email, password);
+      if (result.ok) {
         router.push("/");
         router.refresh();
       } else {
-        setError(true);
+        setError(ERROR_MESSAGES[result.error]);
       }
     });
   }
@@ -62,9 +67,15 @@ export default function LoginPage() {
             />
           </label>
 
+          <div className="text-right">
+            <Link href="/forgot-password" className="text-sm font-semibold text-orange-700">
+              Password bhool gaye? — Forgot password?
+            </Link>
+          </div>
+
           {error ? (
             <p data-testid="login-error" className="text-sm font-semibold text-red-600">
-              Email ya password galat — Incorrect email or password
+              {error}
             </p>
           ) : null}
 

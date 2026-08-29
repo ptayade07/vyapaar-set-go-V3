@@ -26,3 +26,22 @@ test("correct credentials log in, land on the PIN screen, and logout ends the se
   await page.goto("/customers");
   await page.getByLabel("Email").waitFor({ state: "visible", timeout: 15000 });
 });
+
+test("repeated wrong-password attempts eventually get rate limited", async ({ page }) => {
+  test.setTimeout(60000);
+  // The rate limit is per caller IP, not per email -- other tests in this same file (and this
+  // worker's shared IP bucket) may have already used up part of the budget, so this doesn't assert
+  // on a specific attempt number. It just proves the limit is reachable and shows the right
+  // message once it is.
+  let sawRateLimited = false;
+  for (let attempt = 0; attempt < 6 && !sawRateLimited; attempt++) {
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(`rate-limit-probe-${attempt}@vyapaarsetgo.test`);
+    await page.getByLabel("Password").fill("wrong-password");
+    await page.getByRole("button", { name: "Login karo" }).click();
+    await expect(page.getByTestId("login-error")).toBeVisible({ timeout: 15000 });
+    const text = await page.getByTestId("login-error").innerText();
+    sawRateLimited = text.includes("Too many attempts");
+  }
+  expect(sawRateLimited).toBe(true);
+});
