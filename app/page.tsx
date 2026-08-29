@@ -117,6 +117,41 @@ export default async function DashboardPage() {
         <T as="p" className="mt-1 text-gray-500" hi="Aaj ka hisaab ek nazar mein" en="Your business at a glance" />
       </div>
 
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <SummaryCard
+          titleHi="Total Udhaar"
+          titleEn="Money customers owe"
+          subtitle="Money customers owe"
+          amountPaise={totalUdhaar}
+          color="bg-red-500"
+          Icon={TrendingUp}
+        />
+        <SummaryCard
+          titleHi="Total Advance"
+          titleEn="Customer paid ahead"
+          subtitle="Customer paid ahead"
+          amountPaise={totalAdvance}
+          color="bg-green-600"
+          Icon={TrendingDown}
+        />
+        <SummaryCard
+          titleHi="Aaj ka Hisaab"
+          titleEn="Today's cash in"
+          subtitle="Today's cash in"
+          amountPaise={todayTotal}
+          color="bg-orange-600"
+          Icon={IndianRupee}
+        />
+        <SummaryCard
+          titleHi="Supplier Dena"
+          titleEn="You owe suppliers"
+          subtitle="You owe suppliers"
+          amountPaise={supplierDena}
+          color="bg-amber-700"
+          Icon={Truck}
+        />
+      </div>
+
       <QuickEntry customers={customers} />
 
       {agingCounts.some((bucket) => bucket.count > 0) ? (
@@ -155,41 +190,6 @@ export default async function DashboardPage() {
           </div>
         </section>
       ) : null}
-
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <SummaryCard
-          titleHi="Total Udhaar"
-          titleEn="Money customers owe"
-          subtitle="Money customers owe"
-          amountPaise={totalUdhaar}
-          color="bg-red-500"
-          Icon={TrendingUp}
-        />
-        <SummaryCard
-          titleHi="Total Advance"
-          titleEn="Customer paid ahead"
-          subtitle="Customer paid ahead"
-          amountPaise={totalAdvance}
-          color="bg-green-600"
-          Icon={TrendingDown}
-        />
-        <SummaryCard
-          titleHi="Aaj ka Hisaab"
-          titleEn="Today's cash in"
-          subtitle="Today's cash in"
-          amountPaise={todayTotal}
-          color="bg-orange-600"
-          Icon={IndianRupee}
-        />
-        <SummaryCard
-          titleHi="Supplier Dena"
-          titleEn="You owe suppliers"
-          subtitle="You owe suppliers"
-          amountPaise={supplierDena}
-          color="bg-amber-700"
-          Icon={Truck}
-        />
-      </div>
 
       <div className="flex flex-wrap gap-3">
         <Link
