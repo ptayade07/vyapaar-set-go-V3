@@ -1,9 +1,11 @@
 "use server";
 
+import { createHash, randomBytes } from "node:crypto";
 import { compare, hash } from "bcryptjs";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { SESSION_COOKIE } from "@/backend/lib/auth";
+import { sendPasswordResetEmail } from "@/backend/lib/email";
 import { prisma } from "@/backend/lib/prisma";
 import { getCallerIpHash, isWithinRateLimit, recordAttempt } from "@/backend/lib/rate-limit";
 import { createSessionToken } from "@/backend/lib/session";
@@ -15,6 +17,9 @@ const SIGNUP_RATE_LIMIT = 5;
 const SIGNUP_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const LOGIN_RATE_LIMIT = 5;
 const LOGIN_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const PASSWORD_RESET_RATE_LIMIT = 5;
+const PASSWORD_RESET_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const PASSWORD_RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 async function setSessionCookie(userId: string, shopId: string) {
   const token = await createSessionToken({ userId, shopId });
@@ -109,5 +114,79 @@ export async function signupAction(email: string, password: string, shopName: st
   await recordAttempt(prisma.signupAttempt, ipHash);
 
   await setSessionCookie(user.id, user.shopId);
+  return { ok: true };
+}
+
+async function getBaseUrl(): Promise<string> {
+  const headerStore = await headers();
+  const host = headerStore.get("host") ?? "localhost:3000";
+  const proto = headerStore.get("x-forwarded-proto") ?? (process.env.NODE_ENV === "production" ? "https" : "http");
+  return `${proto}://${host}`;
+}
+
+export type RequestPasswordResetResult = { ok: true } | { ok: false; error: "RATE_LIMITED" };
+
+/**
+ * Always returns { ok: true } for a request that isn't rate limited -- regardless of whether the
+ * email actually belongs to a User -- and only sends an email when it does. Same anti-enumeration
+ * principle as loginAction: the response can't be used to check which emails are registered.
+ * Rate limiting itself is a different, revealable concern (too many *requests* from this IP, not
+ * "this specific email exists"), so RATE_LIMITED is a distinct, visible result.
+ */
+export async function requestPasswordResetAction(email: string): Promise<RequestPasswordResetResult> {
+  const ipHash = await getCallerIpHash();
+  const allowed = await isWithinRateLimit(
+    prisma.passwordResetAttempt,
+    ipHash,
+    PASSWORD_RESET_RATE_LIMIT,
+    PASSWORD_RESET_RATE_WINDOW_MS,
+  );
+  if (!allowed) {
+    return { ok: false, error: "RATE_LIMITED" };
+  }
+  await recordAttempt(prisma.passwordResetAttempt, ipHash);
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+  if (user) {
+    const rawToken = randomBytes(32).toString("hex");
+    const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+    const expiresAt = new Date(Date.now() + PASSWORD_RESET_TOKEN_TTL_MS);
+    await prisma.passwordResetToken.create({ data: { tokenHash, userId: user.id, expiresAt } });
+
+    const baseUrl = await getBaseUrl();
+    await sendPasswordResetEmail(user.email, `${baseUrl}/reset-password?token=${rawToken}`);
+  }
+
+  return { ok: true };
+}
+
+export type ResetPasswordResult =
+  | { ok: true }
+  | { ok: false; error: "INVALID_OR_EXPIRED_TOKEN" | "WEAK_PASSWORD" };
+
+/**
+ * Looks the token up by its hash (never the raw value -- see the PasswordResetToken model), and
+ * deliberately collapses "no such token" and "token expired" into one INVALID_OR_EXPIRED_TOKEN
+ * result -- distinguishing them tells an attacker holding a guessed/leaked token more than they
+ * need to know.
+ */
+export async function resetPasswordAction(rawToken: string, newPassword: string): Promise<ResetPasswordResult> {
+  if (newPassword.length < MIN_PASSWORD_LENGTH) {
+    return { ok: false, error: "WEAK_PASSWORD" };
+  }
+
+  const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+  const resetToken = await prisma.passwordResetToken.findUnique({ where: { tokenHash } });
+  if (!resetToken || resetToken.expiresAt < new Date()) {
+    return { ok: false, error: "INVALID_OR_EXPIRED_TOKEN" };
+  }
+
+  const passwordHash = await hash(newPassword, SALT_ROUNDS);
+  await prisma.user.update({ where: { id: resetToken.userId }, data: { passwordHash } });
+  // Every outstanding token for this user, not just the one used -- if multiple reset emails were
+  // requested, using one invalidates the others too, so an old leaked link stops working.
+  await prisma.passwordResetToken.deleteMany({ where: { userId: resetToken.userId } });
+
   return { ok: true };
 }
