@@ -9,13 +9,18 @@
 - One free Postgres connection string is required for deploy and local persistence. Neon is the documented default and has a no-card free tier.
 - `AUTH_SECRET` is required — it signs the login session cookie. Generate one with
   `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` and put it in `.env`.
-- The app is multi-tenant: every shopkeeper logs in with a real email + password
-  (`backend/lib/auth.ts`), then unlocks a 4-digit PIN (default `1234`) as a quick per-device lock
-  on top — see `PRODUCTION_STAGES.md`'s Stage 2. Shops aren't self-serve yet: create one by hand
-  with `npm run create-pilot-user -- "Shop Name" owner@example.com "a password"`.
+- The app is multi-tenant: every shopkeeper signs up with a real email + password at `/signup`
+  (self-serve, see `PRODUCTION_STAGES.md`'s Stage 3), then unlocks a 4-digit PIN (default `1234`)
+  as a quick per-device lock on top. `npm run create-pilot-user -- "Shop Name" owner@example.com
+  "a password"` still exists as a hand-creation option (support/admin use).
+- `RESEND_API_KEY` is required for password-reset emails to actually send — get a free key at
+  resend.com. The reset flow (`/forgot-password`, `/reset-password`) works fully without a
+  verified domain; without one, Resend only delivers to the email the Resend account itself
+  signed up with, so real emails to other shopkeepers need a verified domain first. Leave unset
+  and the app still runs — requesting a reset just logs an error server-side.
 - `BLOB_READ_WRITE_TOKEN` is optional. Set it (a Vercel Blob store token) to enable receipt-photo
-  attachments on customer transactions — without it, the photo-attach control is simply hidden and
-  everything else works normally.
+  attachments on customer transactions and shop logo uploads — without it, both controls are
+  simply hidden and everything else works normally.
 
 Vyapaar Set Go is a mobile-first digital khata and shop hisaab app for small Indian shopkeepers. It tracks customer udhaar, customer advance, supplier dena, and daily cash flow with large buttons, Hinglish labels, INR formatting, and IST dates.
 
@@ -117,9 +122,14 @@ npm run seed
 
 ## Screens
 
-- Login: email + password, gating every other screen (see Prerequisites above).
+- Login: email + password, gating every other screen (see Prerequisites above). Rate limited
+  (5 failed attempts/hour/IP). Links to Signup and Forgot Password.
+- Signup: self-serve shop creation (shop name + email + password + Terms/Privacy agreement),
+  rate limited, logs straight in.
+- Forgot/Reset Password: request a reset link by email, then set a new password from a one-hour,
+  single-use link.
 - Lock: 4-digit PIN keypad, a quick per-device unlock layered on top of login (session cookie,
-  default PIN `1234`).
+  default PIN `1234`, changeable from Settings).
 - Dashboard: summary cards, a "Kal kya bacha?" aging card (7/15/30-day overdue-customer buckets),
   a Quick Entry bar (customer autocomplete + Udhaar/Payment + amount), today's due reminders,
   recent transactions, and quick actions.
