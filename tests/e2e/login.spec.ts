@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
+import { PrismaClient } from "@prisma/client";
 import { ensureTestUser, loginAsTestUser } from "./utils";
+
+const prisma = new PrismaClient();
 
 test("wrong credentials show an inline error and don't log in", async ({ page }) => {
   await ensureTestUser(); // make sure the fixed test user exists, so this is a genuinely wrong password
@@ -33,15 +36,25 @@ test("repeated wrong-password attempts eventually get rate limited", async ({ pa
   // worker's shared IP bucket) may have already used up part of the budget, so this doesn't assert
   // on a specific attempt number. It just proves the limit is reachable and shows the right
   // message once it is.
-  let sawRateLimited = false;
-  for (let attempt = 0; attempt < 6 && !sawRateLimited; attempt++) {
-    await page.goto("/login");
-    await page.getByLabel("Email").fill(`rate-limit-probe-${attempt}@vyapaarsetgo.test`);
-    await page.getByLabel("Password").fill("wrong-password");
-    await page.getByRole("button", { name: "Login karo" }).click();
-    await expect(page.getByTestId("login-error")).toBeVisible({ timeout: 15000 });
-    const text = await page.getByTestId("login-error").innerText();
-    sawRateLimited = text.includes("Too many attempts");
+  //
+  // Cleanup at the end matters here more than in most other tests: every real user of this suite
+  // shares one local IP bucket, so if this test doesn't clear the LoginAttempt rows it creates, it
+  // poisons every *other* test that needs to log in for the rest of the run -- they'd all hit this
+  // same exhausted rate limit and never reach the PIN screen. In real production this can't happen
+  // (different users have different real IPs); it's purely a local-testing artifact.
+  try {
+    let sawRateLimited = false;
+    for (let attempt = 0; attempt < 6 && !sawRateLimited; attempt++) {
+      await page.goto("/login");
+      await page.getByLabel("Email").fill(`rate-limit-probe-${attempt}@vyapaarsetgo.test`);
+      await page.getByLabel("Password").fill("wrong-password");
+      await page.getByRole("button", { name: "Login karo" }).click();
+      await expect(page.getByTestId("login-error")).toBeVisible({ timeout: 15000 });
+      const text = await page.getByTestId("login-error").innerText();
+      sawRateLimited = text.includes("Too many attempts");
+    }
+    expect(sawRateLimited).toBe(true);
+  } finally {
+    await prisma.loginAttempt.deleteMany({});
   }
-  expect(sawRateLimited).toBe(true);
 });
