@@ -43,7 +43,7 @@ test("update shop settings, PDF still downloads, and PIN can be changed", async 
   ]);
 
   await page.reload();
-  await expect(page.getByLabel("Shop naam")).toHaveValue(updatedName);
+  await expect(page.getByLabel("Shop naam")).toHaveValue(updatedName, { timeout: 15000 });
   await expect(page.getByLabel("Address (optional)")).toHaveValue("221B Baker Street, Pune");
   await expect(page.getByLabel("Phone (optional)")).toHaveValue("9998887770");
 

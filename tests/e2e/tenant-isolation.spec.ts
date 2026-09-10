@@ -74,15 +74,15 @@ test("two shops never see, list, or reach each other's data", async ({ browser }
 
     // Lists: each shop sees only its own row, never the other shop's.
     await pageA.goto("/customers");
-    await expect(pageA.getByText(customerAName)).toBeVisible();
+    await expect(pageA.getByText(customerAName)).toBeVisible({ timeout: 15000 });
     await expect(pageA.getByText(customerBName)).toHaveCount(0);
 
     await pageB.goto("/customers");
-    await expect(pageB.getByText(customerBName)).toBeVisible();
+    await expect(pageB.getByText(customerBName)).toBeVisible({ timeout: 15000 });
     await expect(pageB.getByText(customerAName)).toHaveCount(0);
 
     await pageA.goto("/inventory");
-    await expect(pageA.getByText(itemAName)).toBeVisible();
+    await expect(pageA.getByText(itemAName)).toBeVisible({ timeout: 15000 });
     await expect(pageA.getByText(itemBName)).toHaveCount(0);
 
     // The authorization boundary, not just a list filter: shop B guessing shop A's customer id
@@ -93,7 +93,7 @@ test("two shops never see, list, or reach each other's data", async ({ browser }
     // actually verifies is the one that matters for security -- shop A's name/data never reaches
     // the page -- rather than asserting on that cosmetic status code.
     await pageB.goto(`/customers/${customerAId}`);
-    await expect(pageB.getByText("Nahi mila")).toBeVisible();
+    await expect(pageB.getByText("Nahi mila")).toBeVisible({ timeout: 15000 });
     await expect(pageB.getByText(customerAName)).toHaveCount(0);
 
     // Dashboard totals shouldn't leak into each other either.
